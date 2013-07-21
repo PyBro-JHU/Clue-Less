@@ -4,9 +4,6 @@ game entities for suspects, weapons, rooms, hallways, game cards,
 and the game board
 """
 
-import random
-
-
 #constants for suspect names
 SUSPECT = 'Suspect'
 
@@ -98,6 +95,11 @@ HALLWAY = [
     BALLROOM_KITCHEN
 ]
 
+#constants for turn state
+AWAITING_MOVE = "Waiting for player to move"
+AWAITING_SUGGESTION = "Waiting for player to make suggestion"
+AWAITING_SUGGESTION_RESPONSE = "Waiting for response to player suggestion"
+
 
 class Player(object):
     """
@@ -114,10 +116,13 @@ class GameSpace(object):
     GameSpace is an abstract super class used to define
     spaces on the game board
     """
-    def __init__(self, name, connected_spaces):
+    def __init__(self, name, connected_spaces, suspects=None):
         self.name = name
         self.connected_spaces = connected_spaces
-        self.suspects = list()
+        if suspects:
+            self.suspects = suspects
+        else:
+            self.suspects = list()
 
     def is_available(self):
         raise NotImplementedError
@@ -163,8 +168,8 @@ class HomeSquare(GameSpace):
     game board.  Starting squares may only have one occupant at a time
     and can not be moved to during a turn
     """
-    def __init__(self, name, connected_spaces):
-        super(HomeSquare, self).__init__(name, connected_spaces)
+    def __init__(self, name, connected_spaces, suspects=None):
+        super(HomeSquare, self).__init__(name, connected_spaces, suspects=None)
         self.suspect = None
 
     def is_available(self):
@@ -343,37 +348,43 @@ class GameBoard(object):
               name=MUSTARD,
               connected_spaces=[
                   LOUNGE_DINING
-              ]
+              ],
+              suspects=[MUSTARD]
           ),
           SCARLET: HomeSquare(
               name=SCARLET,
               connected_spaces=[
                   HALL_LOUNGE
-              ]
+              ],
+              suspects=[SCARLET]
           ),
           PLUM: HomeSquare(
               name=PLUM,
               connected_spaces=[
                   STUDY_LIBRARY
-              ]
+              ],
+              suspects=[PLUM]
           ),
           GREEN: HomeSquare(
               name=GREEN,
               connected_spaces=[
                   CONSERVATORY_BALLROOM
-              ]
+              ],
+              suspects=[GREEN]
           ),
           WHITE: HomeSquare(
               name=WHITE,
               connected_spaces=[
                   BALLROOM_KITCHEN
-              ]
+              ],
+              suspects=[WHITE]
           ),
           PEACOCK: HomeSquare(
               name=PEACOCK,
               connected_spaces=[
                   LIBRARY_CONSERVATORY
-              ]
+              ],
+              suspects=[PEACOCK]
           )
       }
 
@@ -385,13 +396,3 @@ class GameCard(object):
     def __init__(self, item, item_type):
         self.item  = item
         self.type = item_type
-
-
-
-
-
-
-
-
-
-
