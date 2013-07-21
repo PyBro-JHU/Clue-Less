@@ -70,30 +70,14 @@ class CardDeck(object):
         return [self._game_cards[x::num_hands] for x in range(num_hands)]
 
 
-class TurnController(object):
-    def __init__(self, players):
-        self.turn_list = list(players)
-        self.current_player = self.turn_list[0]
-        self.turn_status = game_state.AWAITING_MOVE
-
-    def next_turn(self):
-        turn_index = self.turn_list.index(self.current_player)
-        if turn_index < (len(self.turn_list)-1):
-            turn_index += 1
-        else:
-            turn_index = 0
-        self.current_player = self.turn_list[turn_index]
-        self.turn_status = game_state.AWAITING_MOVE
-
-
-class Game(object):
+class GameEngine(object):
 
     def __init__(self, players):
         self.players = players
-        self.game_board = game_state.GameBoard()
+        self.game = None
 
-        self.turn = TurnController(players)
-        self.player_messages = list()
+    def start_new_game(self):
+        self.game= game_state.GameState(self.players)
 
         card_deck = CardDeck()
 
@@ -104,10 +88,10 @@ class Game(object):
         num_players = len(self.players)
         hands = card_deck.deal_cards(num_players)
         for x in range(num_players):
-            players[x].game_cards = hands[x]
+            self.game.players[x].game_cards = hands[x]
 
     #Todo: Sgonzales complete player move operations
-    def move_player(self, player, space_name):
+    def handle_move(self, player, space_name):
         pass
 
     def _move_suspect(self):
@@ -116,10 +100,10 @@ class Game(object):
     def _move_weapon(self):
         pass
 
-    def player_suggestion(self, player, suspect, weapon, room):
+    def handle_suggestion(self, player, suspect, weapon, room):
         pass
 
-    def player_suggestion_response(self, player, game_card):
+    def handle_suggestion_response(self, player, game_card):
         pass
 
     def process_accusation(self, player, suspect, weapon, room):
@@ -128,15 +112,11 @@ class Game(object):
     def end_player_turn(self, player):
         pass
 
-if __name__ == '__main__':
-    card_deck = CardDeck()
-    print len(card_deck._game_cards)
-    #the case file contains the winning cards
-    print card_deck.draw_winning_cards()
-    print len(card_deck._game_cards)
-
-    hands = card_deck.deal_cards(4)
-
-    print len(hands)
-    for hand in hands:
-        print hand
+    def _next_turn(self):
+        turn_index = self.game.turn_list.index(self.game.current_player)
+        if turn_index < (len(self.game.turn_list)-1):
+            turn_index += 1
+        else:
+            turn_index = 0
+        self.game.current_player = self.game.turn_list[turn_index]
+        self.game.turn_status = game_state.AWAITING_MOVE

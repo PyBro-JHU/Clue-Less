@@ -174,14 +174,31 @@ class HomeSquare(GameSpace):
         return False
 
 
-class GameBoard(object):
+class GameCard(object):
     """
-    The GameBoard creates a collections of HomeSquares, Rooms, and Hallways,
-    and defines their relation to one another on the game board
+    represents a single Clue-less game card
     """
-    def __init__(self):
+    def __init__(self, item, item_type):
+        self.item = item
+        self.type = item_type
 
-        self.spaces = {
+
+class GameState(object):
+    """
+    GameState  creates all properties necessary to
+    observe the state fo the Game in play
+    """
+    def __init__(self, players):
+        self.players = players
+        self.player_messages = list()
+
+        self.turn_list = list(players)
+        self.current_player = self.turn_list[0]
+        self.turn_status = AWAITING_MOVE
+
+        #The game_board holds a collections of HomeSquares, Rooms, and Hallways,
+        #and defines their relation to one another on the game board
+        self.game_board = {
             KITCHEN: Room(
                 name=KITCHEN,
                 connected_spaces=[
@@ -384,10 +401,3 @@ class GameBoard(object):
         }
 
 
-class GameCard(object):
-    """
-    represents a single Clue-less game card
-    """
-    def __init__(self, item, item_type):
-        self.item = item
-        self.type = item_type
