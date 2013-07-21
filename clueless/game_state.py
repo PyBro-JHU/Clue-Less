@@ -199,7 +199,7 @@ class GameState(object):
         #holds the winning cards
         self.case_file = None
 
-        #The game_board holds a collections of HomeSquares, Rooms, and Hallways,
+        #The game_board is a collections of HomeSquares, Rooms, and Hallways,
         #and defines their relation to one another on the game board
         self.game_board = {
             KITCHEN: Room(
@@ -402,5 +402,3 @@ class GameState(object):
                 suspects=[PEACOCK]
             )
         }
-
-
