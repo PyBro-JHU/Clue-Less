@@ -77,7 +77,7 @@ class GameEngine(object):
         self.game = None
 
     def start_new_game(self):
-        self.game= game_state.GameState(self.players)
+        self.game = game_state.GameState(self.players)
 
         card_deck = CardDeck()
 
@@ -85,11 +85,11 @@ class GameEngine(object):
         self.game.case_file = card_deck.draw_winning_cards()
 
         #deal cards to the players
+        card_deck.shuffle_cards()
         num_players = len(self.players)
         hands = card_deck.deal_cards(num_players)
         for x in range(num_players):
             self.game.players[x].game_cards = hands[x]
-
 
     #Todo: Sgonzales complete player move operations
     def handle_move(self, player, space_name):
@@ -107,10 +107,10 @@ class GameEngine(object):
     def handle_suggestion_response(self, player, game_card):
         pass
 
-    def process_accusation(self, player, suspect, weapon, room):
+    def handle_accusation(self, player, suspect, weapon, room):
         pass
 
-    def end_player_turn(self, player):
+    def handle_end_turn(self, player):
         pass
 
     def _next_turn(self):
@@ -123,4 +123,7 @@ class GameEngine(object):
         self.game.turn_status = game_state.AWAITING_MOVE
 
     def _save_game(self):
+        pass
+
+    def _load_game(self):
         pass
