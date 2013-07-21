@@ -187,206 +187,207 @@ class GameBoard(object):
     """
     def __init__(self):
 
-      self.spaces = {
-          KITCHEN: Room(
-              name=KITCHEN,
-              connected_spaces=[
-                  DINING_KITCHEN,
-                  BALLROOM_KITCHEN,
-                  STUDY
-              ]
-          ),
-          BALLROOM: Room(
-              name=BALLROOM,
-              connected_spaces=[
-                  BALLROOM_KITCHEN,
-                  CONSERVATORY_BALLROOM,
-                  BILLIARD_BALLROOM
-              ]
-          ),
-          CONSERVATORY: Room(
-              name=CONSERVATORY,
-              connected_spaces=[
-                  CONSERVATORY_BALLROOM,
-                  LIBRARY_CONSERVATORY,
-                  LOUNGE
-              ]
-          ),
-          BILLIARD_ROOM: Room(
-              name=BILLIARD_ROOM,
-              connected_spaces=[
-                  HALL_BILLIARD,
-                  LIBRARY_BILLIARD,
-                  BILLIARD_BALLROOM,
-                  BILLIARD_DINING
-              ]
-          ),
-          LIBRARY:Room(
-              name=LIBRARY,
-              connected_spaces=[
-                  STUDY_LIBRARY,
-                  LIBRARY_CONSERVATORY,
-                  LIBRARY_BILLIARD
-              ]
-          ),
-          STUDY: Room(
-              name=STUDY,
-              connected_spaces=[
-                  KITCHEN,
-                  STUDY_LIBRARY,
-                  STUDY_HALL
-              ]
-          ),
-          HALL: Room(
-              name=HALL,
-              connected_spaces=[
-                  STUDY_HALL,
-                  HALL_BILLIARD,
-                  HALL_LOUNGE
-              ]
-          ),
-          LOUNGE: Room(
-              name=LOUNGE,
-              connected_spaces=[
-                  CONSERVATORY,
-                  HALL_LOUNGE,
-                  LOUNGE_DINING
-              ]
-          ),
-          DINING_ROOM: Room(
-              name=DINING_ROOM,
-              connected_spaces=[
-                  LOUNGE_DINING,
-                  BILLIARD_DINING,
-                  DINING_KITCHEN
-              ]
-          ),
-          STUDY_LIBRARY: Hallway(
-              name=STUDY_LIBRARY,
-              connected_spaces=[
-                  STUDY,
-                  LIBRARY
-              ]
-          ),
-          STUDY_HALL: Hallway(
-              name=STUDY_HALL,
-              connected_spaces=[
-                  STUDY,
-                  HALL
-              ]
-          ),
-          HALL_BILLIARD: Hallway(
-              name=HALL_BILLIARD,
-              connected_spaces=[
-                  HALL,
-                  BILLIARD_ROOM
-              ]
-          ),
-          HALL_LOUNGE: Hallway(
-              name=HALL_LOUNGE,
-              connected_spaces=[
-                  HALL,
-                  LOUNGE
-              ]
-          ),
-          LOUNGE_DINING: Hallway(
-              name=LOUNGE_DINING,
-              connected_spaces=[
-                  LOUNGE,
-                  DINING_ROOM
-              ]
-          ),
-          LIBRARY_CONSERVATORY: Hallway(
-              name=LIBRARY_CONSERVATORY,
-              connected_spaces=[
-                  LIBRARY,
-                  CONSERVATORY
-              ]),
-          LIBRARY_BILLIARD: Hallway(
-              name=LIBRARY_BILLIARD,
-              connected_spaces=[
-                  LIBRARY,
-                  BILLIARD_ROOM
-              ]
-          ),
-          BILLIARD_BALLROOM:  Hallway(
-              name=BILLIARD_BALLROOM,
-              connected_spaces=[
-                  BILLIARD_ROOM,
-                  BALLROOM
-              ]
-          ),
-          BILLIARD_DINING: Hallway(
-              name=BILLIARD_DINING,
-              connected_spaces=[
-                  BILLIARD_ROOM,
-                  DINING_ROOM
-              ]
-          ),
-          DINING_KITCHEN: Hallway(
-              name=DINING_KITCHEN,
-              connected_spaces=[
-                  DINING_ROOM,
-                  KITCHEN
-              ]
-          ),
-          CONSERVATORY_BALLROOM: Hallway(
-              name=CONSERVATORY_BALLROOM,
-              connected_spaces=[
-                  CONSERVATORY,
-                  BALLROOM_KITCHEN
-              ]
-          ),
-          BALLROOM_KITCHEN:  Hallway(
-              name=BALLROOM_KITCHEN,
-              connected_spaces=[
-                  BALLROOM,
-                  KITCHEN
-              ]
-          ),
-          MUSTARD: HomeSquare(
-              name=MUSTARD,
-              connected_spaces=[
-                  LOUNGE_DINING
-              ],
-              suspects=[MUSTARD]
-          ),
-          SCARLET: HomeSquare(
-              name=SCARLET,
-              connected_spaces=[
-                  HALL_LOUNGE
-              ],
-              suspects=[SCARLET]
-          ),
-          PLUM: HomeSquare(
-              name=PLUM,
-              connected_spaces=[
-                  STUDY_LIBRARY
-              ],
-              suspects=[PLUM]
-          ),
-          GREEN: HomeSquare(
-              name=GREEN,
-              connected_spaces=[
-                  CONSERVATORY_BALLROOM
-              ],
-              suspects=[GREEN]
-          ),
-          WHITE: HomeSquare(
-              name=WHITE,
-              connected_spaces=[
-                  BALLROOM_KITCHEN
-              ],
-              suspects=[WHITE]
-          ),
-          PEACOCK: HomeSquare(
-              name=PEACOCK,
-              connected_spaces=[
-                  LIBRARY_CONSERVATORY
-              ],
-              suspects=[PEACOCK]
-          )
-      }
+        self.spaces = {
+            KITCHEN: Room(
+                name=KITCHEN,
+                connected_spaces=[
+                    DINING_KITCHEN,
+                    BALLROOM_KITCHEN,
+                    STUDY
+                ]
+            ),
+            BALLROOM: Room(
+                name=BALLROOM,
+                connected_spaces=[
+                    BALLROOM_KITCHEN,
+                    CONSERVATORY_BALLROOM,
+                    BILLIARD_BALLROOM
+                ]
+            ),
+            CONSERVATORY: Room(
+                name=CONSERVATORY,
+                connected_spaces=[
+                    CONSERVATORY_BALLROOM,
+                    LIBRARY_CONSERVATORY,
+                    LOUNGE
+                ]
+            ),
+            BILLIARD_ROOM: Room(
+                name=BILLIARD_ROOM,
+                connected_spaces=[
+                    HALL_BILLIARD,
+                    LIBRARY_BILLIARD,
+                    BILLIARD_BALLROOM,
+                    BILLIARD_DINING
+                ]
+            ),
+            LIBRARY: Room(
+                name=LIBRARY,
+                connected_spaces=[
+                    STUDY_LIBRARY,
+                    LIBRARY_CONSERVATORY,
+                    LIBRARY_BILLIARD
+                ]
+            ),
+            STUDY: Room(
+                name=STUDY,
+                connected_spaces=[
+                    KITCHEN,
+                    STUDY_LIBRARY,
+                    STUDY_HALL
+                ]
+            ),
+            HALL: Room(
+                name=HALL,
+                connected_spaces=[
+                    STUDY_HALL,
+                    HALL_BILLIARD,
+                    HALL_LOUNGE
+                ]
+            ),
+            LOUNGE: Room(
+                name=LOUNGE,
+                connected_spaces=[
+                    CONSERVATORY,
+                    HALL_LOUNGE,
+                    LOUNGE_DINING
+                ]
+            ),
+            DINING_ROOM: Room(
+                name=DINING_ROOM,
+                connected_spaces=[
+                    LOUNGE_DINING,
+                    BILLIARD_DINING,
+                    DINING_KITCHEN
+                ]
+            ),
+            STUDY_LIBRARY: Hallway(
+                name=STUDY_LIBRARY,
+                connected_spaces=[
+                    STUDY,
+                    LIBRARY
+                ]
+            ),
+            STUDY_HALL: Hallway(
+                name=STUDY_HALL,
+                connected_spaces=[
+                    STUDY,
+                    HALL
+                ]
+            ),
+            HALL_BILLIARD: Hallway(
+                name=HALL_BILLIARD,
+                connected_spaces=[
+                    HALL,
+                    BILLIARD_ROOM
+                ]
+            ),
+            HALL_LOUNGE: Hallway(
+                name=HALL_LOUNGE,
+                connected_spaces=[
+                    HALL,
+                    LOUNGE
+                ]
+            ),
+            LOUNGE_DINING: Hallway(
+                name=LOUNGE_DINING,
+                connected_spaces=[
+                    LOUNGE,
+                    DINING_ROOM
+                ]
+            ),
+            LIBRARY_CONSERVATORY: Hallway(
+                name=LIBRARY_CONSERVATORY,
+                connected_spaces=[
+                    LIBRARY,
+                    CONSERVATORY
+                ]
+            ),
+            LIBRARY_BILLIARD: Hallway(
+                name=LIBRARY_BILLIARD,
+                connected_spaces=[
+                    LIBRARY,
+                    BILLIARD_ROOM
+                ]
+            ),
+            BILLIARD_BALLROOM:  Hallway(
+                name=BILLIARD_BALLROOM,
+                connected_spaces=[
+                    BILLIARD_ROOM,
+                    BALLROOM
+                ]
+            ),
+            BILLIARD_DINING: Hallway(
+                name=BILLIARD_DINING,
+                connected_spaces=[
+                    BILLIARD_ROOM,
+                    DINING_ROOM
+                ]
+            ),
+            DINING_KITCHEN: Hallway(
+                name=DINING_KITCHEN,
+                connected_spaces=[
+                    DINING_ROOM,
+                    KITCHEN
+                ]
+            ),
+            CONSERVATORY_BALLROOM: Hallway(
+                name=CONSERVATORY_BALLROOM,
+                connected_spaces=[
+                    CONSERVATORY,
+                    BALLROOM_KITCHEN
+                ]
+            ),
+            BALLROOM_KITCHEN:  Hallway(
+                name=BALLROOM_KITCHEN,
+                connected_spaces=[
+                    BALLROOM,
+                    KITCHEN
+                ]
+            ),
+            MUSTARD: HomeSquare(
+                name=MUSTARD,
+                connected_spaces=[
+                    LOUNGE_DINING
+                ],
+                suspects=[MUSTARD]
+            ),
+            SCARLET: HomeSquare(
+                name=SCARLET,
+                connected_spaces=[
+                    HALL_LOUNGE
+                ],
+                suspects=[SCARLET]
+            ),
+            PLUM: HomeSquare(
+                name=PLUM,
+                connected_spaces=[
+                    STUDY_LIBRARY
+                ],
+                suspects=[PLUM]
+            ),
+            GREEN: HomeSquare(
+                name=GREEN,
+                connected_spaces=[
+                    CONSERVATORY_BALLROOM
+                ],
+                suspects=[GREEN]
+            ),
+            WHITE: HomeSquare(
+                name=WHITE,
+                connected_spaces=[
+                    BALLROOM_KITCHEN
+                ],
+                suspects=[WHITE]
+            ),
+            PEACOCK: HomeSquare(
+                name=PEACOCK,
+                connected_spaces=[
+                    LIBRARY_CONSERVATORY
+                ],
+                suspects=[PEACOCK]
+            )
+        }
 
 
 class GameCard(object):
@@ -394,5 +395,5 @@ class GameCard(object):
     represents a single Clue-less game card
     """
     def __init__(self, item, item_type):
-        self.item  = item
+        self.item = item
         self.type = item_type

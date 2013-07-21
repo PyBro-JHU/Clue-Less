@@ -1,6 +1,6 @@
 import random
 
-from clueless.game_state import *
+from clueless import game_state
 
 
 class CardDeck(object):
@@ -12,15 +12,18 @@ class CardDeck(object):
 
         #create a list of GameCard objects for the suspects
         self._suspects = [
-            GameCard(item=item, item_type = SUSPECT) for item in SUSPECTS
+            game_state.GameCard(item=item, item_type=game_state.SUSPECT)
+            for item in game_state.SUSPECTS
         ]
         #create a list of GameCard objects for the weapons
         self._weapons = [
-            GameCard(item=item, item_type = WEAPON) for item in WEAPONS
+            game_state.GameCard(item=item, item_type=game_state.WEAPON)
+            for item in game_state.WEAPONS
         ]
         #create a list of GameCard objects for the rooms
         self._rooms = [
-            GameCard(item=item, item_type = ROOM) for item in ROOMS
+            game_state.GameCard(item=item, item_type=game_state.ROOM)
+            for item in game_state.ROOMS
         ]
         #create a full list of cards
         self._game_cards = self._suspects + self._weapons + self._rooms
@@ -66,27 +69,28 @@ class CardDeck(object):
         """
         return [self._game_cards[x::num_hands] for x in range(num_hands)]
 
+
 class TurnController(object):
     def __init__(self, players):
         self.turn_list = list(players)
         self.current_player = self.turn_list[0]
-        self.turn_status = AWAITING_MOVE
+        self.turn_status = game_state.AWAITING_MOVE
 
     def next_turn(self):
-       turn_index = self.turn_list.index(self.current_player)
-       if turn_index < (len(self.turn_list)-1):
-           turn_index += 1
-       else:
-           turn_index = 0
-       self.current_player = self.turn_list[turn_index]
-       self.turn_status = AWAITING_MOVE
+        turn_index = self.turn_list.index(self.current_player)
+        if turn_index < (len(self.turn_list)-1):
+            turn_index += 1
+        else:
+            turn_index = 0
+        self.current_player = self.turn_list[turn_index]
+        self.turn_status = game_state.AWAITING_MOVE
 
 
 class Game(object):
 
     def __init__(self, players):
         self.players = players
-        self.game_board = GameBoard()
+        self.game_board = game_state.GameBoard()
 
         self.turn = TurnController(players)
         self.player_messages = list()
@@ -101,7 +105,6 @@ class Game(object):
         hands = card_deck.deal_cards(num_players)
         for x in range(num_players):
             players[x].game_cards = hands[x]
-
 
     #Todo: Sgonzales complete player move operations
     def move_player(self, player, space_name):
@@ -132,7 +135,7 @@ if __name__ == '__main__':
     print card_deck.draw_winning_cards()
     print len(card_deck._game_cards)
 
-    hands =  card_deck.deal_cards(4)
+    hands = card_deck.deal_cards(4)
 
     print len(hands)
     for hand in hands:
