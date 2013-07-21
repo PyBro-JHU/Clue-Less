@@ -82,13 +82,14 @@ class GameEngine(object):
         card_deck = CardDeck()
 
         #poplate the case file with the winning cards
-        self.case_file = card_deck.draw_winning_cards()
+        self.game.case_file = card_deck.draw_winning_cards()
 
         #deal cards to the players
         num_players = len(self.players)
         hands = card_deck.deal_cards(num_players)
         for x in range(num_players):
             self.game.players[x].game_cards = hands[x]
+
 
     #Todo: Sgonzales complete player move operations
     def handle_move(self, player, space_name):
