@@ -139,10 +139,8 @@ class Room(GameSpace):
         self.weapons = None
 
     def is_available(self):
-        """
-        A Room can hold more than one suspect at a time
-        so it will always be available
-        """
+        #A Room can hold more than one suspect at a time
+        #so it will always be available
         return True
 
 
@@ -155,10 +153,8 @@ class Hallway(GameSpace):
         self.suspect = None
 
     def is_available(self):
-        """
-        Only one suspect can be in a hallway at a time, so return
-        True if empty or False if occupied
-        """
+        #Only one suspect can be in a hallway at a time, so return
+        #True if empty or False if occupied
         return not self.suspect
 
 
@@ -173,10 +169,8 @@ class HomeSquare(GameSpace):
         self.suspect = None
 
     def is_available(self):
-        """
-        returns false because HomeSquares can not be moved to
-        during regular game play
-        """
+        #returns false because players can not move to
+        #HomeSquares during regular play
         return False
 
 
