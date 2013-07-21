@@ -196,6 +196,9 @@ class GameState(object):
         self.current_player = self.turn_list[0]
         self.turn_status = AWAITING_MOVE
 
+        #holds the winning cards
+        self.case_file = None
+
         #The game_board holds a collections of HomeSquares, Rooms, and Hallways,
         #and defines their relation to one another on the game board
         self.game_board = {
