@@ -121,3 +121,6 @@ class GameEngine(object):
             turn_index = 0
         self.game.current_player = self.game.turn_list[turn_index]
         self.game.turn_status = game_state.AWAITING_MOVE
+
+    def _save_game(self):
+        pass
