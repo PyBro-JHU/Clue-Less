@@ -2,7 +2,6 @@ import unittest
 from clueless import game_state
 
 
-
 class WhenTestingGameCard(unittest.TestCase):
 
     def test_format(self):
@@ -12,12 +11,22 @@ class WhenTestingGameCard(unittest.TestCase):
         self.assertEqual(game_card.item, card__dict["item"])
         self.assertEqual(game_card.type, card__dict["type"])
 
+
 class WhenTestingPlayer(unittest.TestCase):
 
     def test_format(self):
         player = game_state.Player(username="testuser")
         player.suspect = game_state.PLUM
-        player.game_cards = [game_state.GameCard(item=game_state.WRENCH, item_type=game_state.WEAPON), game_state.GameCard(item=game_state.PEACOCK, item_type=game_state.SUSPECT)]
+        player.game_cards = [
+            game_state.GameCard(
+                item=game_state.WRENCH,
+                item_type=game_state.WEAPON
+            ),
+            game_state.GameCard(
+                item=game_state.PEACOCK,
+                item_type=game_state.SUSPECT
+            )
+        ]
         player_dict = player.format()
         self.assertEqual(player.username, player_dict["username"])
         self.assertEqual(player.suspect, player_dict["suspect"])
@@ -112,3 +121,48 @@ class WhenTestingHomeSquare(unittest.TestCase):
         )
         self.assertEqual(
             self.home_square.suspects, home_square_dict["suspects"])
+
+
+class WhenTestingGameState(unittest.TestCase):
+
+    def setUp(self):
+        self.game_cards1 = [game_state.GameCard(
+            item=game_state.WRENCH, item_type=game_state.WEAPON)]
+        self.game_cards2 = [game_state.GameCard(
+            item=game_state.REVOLVER, item_type=game_state.WEAPON)]
+        self.players = [
+            game_state.Player(
+                username="testuser1",
+                suspect=game_state.PLUM,
+                game_cards=self.game_cards1),
+            game_state.Player(
+                username="testuser2",
+                suspect=game_state.PEACOCK,
+                game_cards=self.game_cards2)
+        ]
+        self.game_state = game_state.GameState(players=self.players)
+
+    def test_format(self):
+        game_state_dict = self.game_state.format()
+        for player in self.game_state.players:
+            self.assertTrue(player.format() in game_state_dict["players"])
+        self.assertEqual(
+            self.game_state.player_messages,
+            game_state_dict["player_messages"]
+        )
+        for player in self.game_state.turn_list:
+            self.assertTrue(player.format() in game_state_dict["turn_list"])
+        self.assertEqual(
+            self.game_state.current_player.format(),
+            game_state_dict["current_player"]
+        )
+        self.assertEqual(
+            self.game_state.turn_status,
+            game_state_dict["turn_status"]
+        )
+        for game_card in self.game_state.case_file:
+            self.assertTrue(
+                game_card.format() in game_state_dict["case_file"]
+            )
+        for space in self.game_state.game_board:
+            self.assertTrue(space.format() in game_state_dict["game_board"])

@@ -66,6 +66,7 @@ ROOMS = [
     DINING_ROOM
 ]
 
+
 #constants for hallways
 STUDY_LIBRARY = 'study-library hallway'
 STUDY_HALL = 'study-hall ahllway'
@@ -80,7 +81,7 @@ DINING_KITCHEN = 'dining-kitchen hallway'
 CONSERVATORY_BALLROOM = 'conservatory-ballroom hallway'
 BALLROOM_KITCHEN = "ballroom-kitchen hallway"
 
-HALLWAY = [
+HALLWAYS = [
     STUDY_LIBRARY,
     STUDY_HALL,
     HALL_BILLIARD,
@@ -99,8 +100,6 @@ HALLWAY = [
 AWAITING_MOVE = "Waiting for player to move"
 AWAITING_SUGGESTION = "Waiting for player to make suggestion"
 AWAITING_SUGGESTION_RESPONSE = "Waiting for response to player suggestion"
-
-
 
 
 class GameCard(object):
@@ -267,7 +266,7 @@ class GameState(object):
         if case_file:
             self.case_file = case_file
         else:
-            self.case_file = None
+            self.case_file = list()
 
         #The game_board is a collections of HomeSquares, Rooms, and Hallways,
         #and defines their relation to one another on the game board
@@ -495,3 +494,45 @@ class GameState(object):
                 game_space.format() for game_space in self.game_board
             ]
         }
+
+
+class GameStateBuilder(object):
+    def build_gamestate_from_dict(self, game_state_dict):
+        game_state = game_state_dict.copy()
+
+        game_state["players"] = self._build_players(game_state["players"])
+
+        game_state["turn_list"] = [
+            player for player in game_state["players"]
+            if player.username in [
+                turn_list_player["username"]
+                for turn_list_player in game_state["turn_list"]
+            ]
+        ]
+        if game_state["current_player"]:
+            game_state["current_player"] = [
+                player for player in game_state["players"]
+                if player.username == game_state["current_player"]["username"]
+            ][0]
+        game_state["case_file"] = self._build_game_cards(
+            game_state["case_file"])
+
+        rooms = [Room(**room) for room in game_state["game_board"] if room["name"] in ROOMS]
+        hallways = [Hallway(**hallway) for hallway in game_state["game_board"] if hallway["name"] in HALLWAYS]
+        home_squares = [HomeSquare(**home_square) for home_square in game_state["game_board"] if home_square["name"] in SUSPECTS]
+        game_state["game_board"] = rooms + hallways + home_squares
+
+        return GameState(**game_state)
+
+
+    def _build_game_cards(self, game_cards):
+        return [
+            GameCard(**game_card_dict) for game_card_dict in game_cards
+        ]
+
+    def _build_players(self, players):
+        for player_dict in players:
+            player_dict["game_cards"] = self._build_game_cards(
+                player_dict["game_cards"])
+        return [Player(**player_dict) for player_dict in players]
+
