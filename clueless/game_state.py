@@ -66,6 +66,7 @@ ROOMS = [
     DINING_ROOM
 ]
 
+
 #constants for hallways
 STUDY_LIBRARY = 'study-library hallway'
 STUDY_HALL = 'study-hall ahllway'
@@ -80,7 +81,7 @@ DINING_KITCHEN = 'dining-kitchen hallway'
 CONSERVATORY_BALLROOM = 'conservatory-ballroom hallway'
 BALLROOM_KITCHEN = "ballroom-kitchen hallway"
 
-HALLWAY = [
+HALLWAYS = [
     STUDY_LIBRARY,
     STUDY_HALL,
     HALL_BILLIARD,
@@ -101,13 +102,34 @@ AWAITING_SUGGESTION = "Waiting for player to make suggestion"
 AWAITING_SUGGESTION_RESPONSE = "Waiting for response to player suggestion"
 
 
+class GameCard(object):
+    """
+    represents a single Clue-less game card
+    """
+    def __init__(self, item, item_type):
+        self.item = item
+        self.type = item_type
+
+    def format(self):
+        """
+        format the object as a dictionary.
+        """
+        return {
+            "item": self.item,
+            "type": self.type
+        }
+
+
 class Player(object):
     """
     Player is an external user fo the system that will be playing the game
     """
     def __init__(self, username, suspect=None, game_cards=None):
         self.username = username
-        self.suspect = None
+        if suspect:
+            self.suspect = suspect
+        else:
+            self.suspect = None
         if game_cards:
             self.game_cards = game_cards
         else:
@@ -149,8 +171,7 @@ class GameSpace(object):
         return {
             "name": self.name,
             "connected_spaces":  self.connected_spaces,
-            "suspects": self.suspects,
-            "weapons": self.weapons
+            "suspects": self.suspects
         }
 
 
@@ -174,7 +195,7 @@ class Room(GameSpace):
 
     def format(self):
         """
-        format the object as a dictionary.  This moethod overrides the
+        format the object as a dictionary.  This method overrides the
         superclass format method in order to add the weapons attribute
         """
         return {
@@ -197,7 +218,7 @@ class Hallway(GameSpace):
     def is_available(self):
         #Only one suspect can be in a hallway at a time, so return
         #True if empty or False if occupied
-        return not self.suspects
+        return not (self.suspects)
 
 
 class HomeSquare(GameSpace):
@@ -213,24 +234,6 @@ class HomeSquare(GameSpace):
         #returns false because players can not move to
         #HomeSquares during regular play
         return False
-
-
-class GameCard(object):
-    """
-    represents a single Clue-less game card
-    """
-    def __init__(self, item, item_type):
-        self.item = item
-        self.type = item_type
-
-    def format(self):
-        """
-        format the object as a dictionary.
-        """
-        return {
-            "item": self.item,
-            "type": self.type
-        }
 
 
 class GameState(object):
@@ -263,7 +266,7 @@ class GameState(object):
         if case_file:
             self.case_file = case_file
         else:
-            self.case_file = None
+            self.case_file = list()
 
         #The game_board is a collections of HomeSquares, Rooms, and Hallways,
         #and defines their relation to one another on the game board
@@ -491,3 +494,68 @@ class GameState(object):
                 game_space.format() for game_space in self.game_board
             ]
         }
+
+
+class GameStateBuilder(object):
+    def build_gamestate_from_dict(self, game_state_dict):
+
+        #copy dictionary
+        game_state = game_state_dict.copy()
+
+        #build the list of Player objects
+        game_state["players"] = self._build_players(game_state["players"])
+
+        #reference the Player objects that are in the turn list
+        game_state["turn_list"] = [
+            player for player in game_state["players"]
+            if player.username in [
+                turn_list_player["username"]
+                for turn_list_player in game_state["turn_list"]
+            ]
+        ]
+
+        #reference the Player object for the current turn
+        if game_state["current_player"]:
+            game_state["current_player"] = [
+                player for player in game_state["players"]
+                if player.username == game_state["current_player"]["username"]
+            ][0]
+
+        #build the list of winning GameCard objects
+        game_state["case_file"] = self._build_game_cards(
+            game_state["case_file"])
+
+        #Create Room objects for all rooms found at the game_board key
+        rooms = [
+            Room(**room) for room in game_state["game_board"]
+            if room["name"] in ROOMS
+        ]
+        #Create Hallway objects for all hallways found at the game_board key
+        hallways = [
+            Hallway(**hallway) for hallway in game_state["game_board"]
+            if hallway["name"] in HALLWAYS
+        ]
+        #Create HomeSquare objects for all home squares found
+        # at the game_board key
+        home_squares = [
+            HomeSquare(**home_square)
+            for home_square in game_state["game_board"]
+            if home_square["name"] in SUSPECTS
+        ]
+
+        #assign the lists of newly created gamespace objects to the game_board
+        game_state["game_board"] = rooms + hallways + home_squares
+
+        #return a new GameState object built from the game state dictionary
+        return GameState(**game_state)
+
+    def _build_game_cards(self, game_cards):
+        return [
+            GameCard(**game_card_dict) for game_card_dict in game_cards
+        ]
+
+    def _build_players(self, players):
+        for player_dict in players:
+            player_dict["game_cards"] = self._build_game_cards(
+                player_dict["game_cards"])
+        return [Player(**player_dict) for player_dict in players]
