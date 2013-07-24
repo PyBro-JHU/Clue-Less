@@ -101,13 +101,36 @@ AWAITING_SUGGESTION = "Waiting for player to make suggestion"
 AWAITING_SUGGESTION_RESPONSE = "Waiting for response to player suggestion"
 
 
+
+
+class GameCard(object):
+    """
+    represents a single Clue-less game card
+    """
+    def __init__(self, item, item_type):
+        self.item = item
+        self.type = item_type
+
+    def format(self):
+        """
+        format the object as a dictionary.
+        """
+        return {
+            "item": self.item,
+            "type": self.type
+        }
+
+
 class Player(object):
     """
     Player is an external user fo the system that will be playing the game
     """
     def __init__(self, username, suspect=None, game_cards=None):
         self.username = username
-        self.suspect = None
+        if suspect:
+            self.suspect = suspect
+        else:
+            self.suspect = None
         if game_cards:
             self.game_cards = game_cards
         else:
@@ -149,8 +172,7 @@ class GameSpace(object):
         return {
             "name": self.name,
             "connected_spaces":  self.connected_spaces,
-            "suspects": self.suspects,
-            "weapons": self.weapons
+            "suspects": self.suspects
         }
 
 
@@ -174,7 +196,7 @@ class Room(GameSpace):
 
     def format(self):
         """
-        format the object as a dictionary.  This moethod overrides the
+        format the object as a dictionary.  This method overrides the
         superclass format method in order to add the weapons attribute
         """
         return {
@@ -197,7 +219,7 @@ class Hallway(GameSpace):
     def is_available(self):
         #Only one suspect can be in a hallway at a time, so return
         #True if empty or False if occupied
-        return not self.suspects
+        return not (self.suspects)
 
 
 class HomeSquare(GameSpace):
@@ -213,24 +235,6 @@ class HomeSquare(GameSpace):
         #returns false because players can not move to
         #HomeSquares during regular play
         return False
-
-
-class GameCard(object):
-    """
-    represents a single Clue-less game card
-    """
-    def __init__(self, item, item_type):
-        self.item = item
-        self.type = item_type
-
-    def format(self):
-        """
-        format the object as a dictionary.
-        """
-        return {
-            "item": self.item,
-            "type": self.type
-        }
 
 
 class GameState(object):
