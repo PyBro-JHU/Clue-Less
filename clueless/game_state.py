@@ -498,10 +498,14 @@ class GameState(object):
 
 class GameStateBuilder(object):
     def build_gamestate_from_dict(self, game_state_dict):
+
+        #copy dictionary
         game_state = game_state_dict.copy()
 
+        #build the list of Player objects
         game_state["players"] = self._build_players(game_state["players"])
 
+        #reference the Player objects that are in the turn list
         game_state["turn_list"] = [
             player for player in game_state["players"]
             if player.username in [
@@ -509,21 +513,41 @@ class GameStateBuilder(object):
                 for turn_list_player in game_state["turn_list"]
             ]
         ]
+
+        #reference the Player object for the current turn
         if game_state["current_player"]:
             game_state["current_player"] = [
                 player for player in game_state["players"]
                 if player.username == game_state["current_player"]["username"]
             ][0]
+
+        #build the list of winning GameCard objects
         game_state["case_file"] = self._build_game_cards(
             game_state["case_file"])
 
-        rooms = [Room(**room) for room in game_state["game_board"] if room["name"] in ROOMS]
-        hallways = [Hallway(**hallway) for hallway in game_state["game_board"] if hallway["name"] in HALLWAYS]
-        home_squares = [HomeSquare(**home_square) for home_square in game_state["game_board"] if home_square["name"] in SUSPECTS]
+        #Create Room objects for all rooms found at the game_board key
+        rooms = [
+            Room(**room) for room in game_state["game_board"]
+            if room["name"] in ROOMS
+        ]
+        #Create Hallway objects for all hallways found at the game_board key
+        hallways = [
+            Hallway(**hallway) for hallway in game_state["game_board"]
+            if hallway["name"] in HALLWAYS
+        ]
+        #Create HomeSquare objects for all home squares found
+        # at the game_board key
+        home_squares = [
+            HomeSquare(**home_square)
+            for home_square in game_state["game_board"]
+            if home_square["name"] in SUSPECTS
+        ]
+
+        #assign the lists of newly created gamespace objects to the game_board
         game_state["game_board"] = rooms + hallways + home_squares
 
+        #return a new GameState object built from the game state dictionary
         return GameState(**game_state)
-
 
     def _build_game_cards(self, game_cards):
         return [
@@ -535,4 +559,3 @@ class GameStateBuilder(object):
             player_dict["game_cards"] = self._build_game_cards(
                 player_dict["game_cards"])
         return [Player(**player_dict) for player_dict in players]
-
