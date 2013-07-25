@@ -200,9 +200,7 @@ class Room(GameSpace):
         """
         return {
             "name": self.name,
-            "connected_spaces": [
-                space.format() for space in self.connected_spaces
-            ],
+            "connected_spaces": self.connected_spaces,
             "suspects": self.suspects,
             "weapons": self.weapons
         }
@@ -490,9 +488,10 @@ class GameState(object):
             "current_player": self.current_player.format(),
             "turn_status": self.turn_status,
             "case_file": [card.format() for card in self.case_file],
-            "game_board": [
-                game_space.format() for game_space in self.game_board
-            ]
+            "game_board": {
+                key: (self.game_board[key]).format()
+                for key in self.game_board
+            }
         }
 
 
@@ -525,26 +524,17 @@ class GameStateBuilder(object):
         game_state["case_file"] = self._build_game_cards(
             game_state["case_file"])
 
-        #Create Room objects for all rooms found at the game_board key
-        rooms = [
-            Room(**room) for room in game_state["game_board"]
-            if room["name"] in ROOMS
-        ]
-        #Create Hallway objects for all hallways found at the game_board key
-        hallways = [
-            Hallway(**hallway) for hallway in game_state["game_board"]
-            if hallway["name"] in HALLWAYS
-        ]
-        #Create HomeSquare objects for all home squares found
-        # at the game_board key
-        home_squares = [
-            HomeSquare(**home_square)
-            for home_square in game_state["game_board"]
-            if home_square["name"] in SUSPECTS
-        ]
-
+        game_board = dict()
         #assign the lists of newly created gamespace objects to the game_board
-        game_state["game_board"] = rooms + hallways + home_squares
+        for key in game_state["game_board"]:
+            if key in ROOMS:
+                game_board[key] = Room(**game_state["game_board"][key])
+            if key in HALLWAYS:
+                game_board[key] = Hallway(**game_state["game_board"][key])
+            if key in SUSPECTS:
+                game_board[key] = HomeSquare(**game_state["game_board"][key])
+
+        game_state["game_board"] = game_board
 
         #return a new GameState object built from the game state dictionary
         return GameState(**game_state)

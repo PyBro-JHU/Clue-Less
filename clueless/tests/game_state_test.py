@@ -166,3 +166,25 @@ class WhenTestingGameState(unittest.TestCase):
             )
         for space in self.game_state.game_board:
             self.assertTrue(space.format() in game_state_dict["game_board"])
+
+
+class WhenTestingGameStateBuilder(unittest.TestCase):
+    def setUp(self):
+        self.players = [
+            game_state.Player(
+                username="testuser1",
+                suspect=game_state.PLUM
+            ),
+            game_state.Player(
+                username="testuser2",
+                suspect=game_state.PEACOCK
+            )
+        ]
+
+    def test_create_game_state_from_dict(self):
+        self.maxDiff = None
+        self.game_state = game_state.GameState(self.players)
+        game_state_dict = self.game_state.format()
+        builder = game_state.GameStateBuilder()
+        game_state_built = builder.build_gamestate_from_dict(game_state_dict)
+        self.assertEqual(game_state_dict, game_state_built.format())
