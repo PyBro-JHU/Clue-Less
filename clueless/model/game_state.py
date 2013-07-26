@@ -156,6 +156,20 @@ class Player(object):
         }
 
 
+class Suggestion(object):
+    def __init__(self, suspect, weapon, room):
+        self.suspect = suspect
+        self.weapon = weapon
+        self.room = room
+
+    def format(self):
+        return {
+            "suspect": self.suspect,
+            "weapon": self.weapon,
+            "room": self.room
+        }
+
+
 class GameSpace(object):
     """
     GameSpace is an abstract super class used to define
@@ -248,8 +262,10 @@ class GameState(object):
     observe the state fo the Game in play
     """
     def __init__(self, players, player_messages=None, turn_list=None,
-                 current_player=None, turn_status=None, case_file=None,
-                 game_board=None):
+                 current_player=None, turn_status=None,
+                 current_suggestion=None, suggestion_response_player=None,
+                 case_file=None, game_board=None):
+
         self.players = players
         if player_messages:
             self.player_messages = player_messages
@@ -267,6 +283,10 @@ class GameState(object):
             self.turn_status = turn_status
         else:
             self.turn_status = AWAITING_MOVE
+
+        self.current_suggestion = current_suggestion
+
+        self.suggestion_response_player = suggestion_response_player
 
         #holds the winning cards
         if case_file:
@@ -495,6 +515,12 @@ class GameState(object):
             ],
             "current_player": self.current_player.format(),
             "turn_status": self.turn_status,
+            "current_suggestion":
+            self.current_suggestion.format()
+            if self.current_suggestion else None,
+            "suggestion_response_player":
+            self.suggestion_response_player.format()
+            if self.suggestion_response_player else None,
             "case_file": [card.format() for card in self.case_file],
             "game_board": {
                 key: (self.game_board[key]).format()
@@ -526,6 +552,17 @@ class GameStateBuilder(object):
             game_state["current_player"] = [
                 player for player in game_state["players"]
                 if player.username == game_state["current_player"]["username"]
+            ][0]
+
+        if game_state["current_suggestion"]:
+            game_state["current_suggestion"] = Suggestion(
+                **game_state["current_suggestion"]
+            )
+        if game_state["suggestion_response_player"]:
+            game_state["suggestion_response_player"] = [
+                player for player in game_state["players"]
+                if player.username ==
+                game_state["suggestion_response_player"]["username"]
             ][0]
 
         #build the list of winning GameCard objects
