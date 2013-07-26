@@ -185,17 +185,35 @@ class GameEngine(object):
             self.game.turn_status = game_state.AWAITING_ACCUSATION_OR_END_TURN
             message = "There is no player that can prove the suggestion false."
             self._send_player_message(message)
-            message = "Player {0} must nake an accusation " \
+            message = "Player {0} must make an accusation " \
                 "or end their turn.".format(
                 player_username)
             self._send_player_message(message)
 
-    def handle_suggestion_response(self, player_username, game_card_item):
+    def handle_suggestion_response(self, player_username, gamecard_item):
         """
         Handles a suggestion response that will prove
         the current player's suggestion false
         """
-        pass
+        #validate request
+        self._validate_player(player_username)
+        self._validate_suggestion_response_player(player_username)
+        self._validate_gamecard_item(gamecard_item)
+        self._validate_suggestion_response_player_owns_card(gamecard_item)
+
+        #show the current player the card
+        self.game.current_player.card_items_seen.append(gamecard_item)
+
+        message = "Player {0} has proven the suggestion false.".format(
+            player_username)
+        self._send_player_message(message)
+
+        #update the turn status
+        self.game.turn_status = game_state.AWAITING_ACCUSATION_OR_END_TURN
+        message = "Player {0} must make an accusation " \
+            "or end their turn.".format(
+            self.game.current_player.name)
+        self._send_player_message(message)
 
     def handle_accusation(self, player_username, suspect, weapon, room):
         pass
@@ -318,6 +336,14 @@ class GameEngine(object):
         if username != self.game.current_player.username:
             raise errors.PlayerOperationOutOfTurnException
 
+    def _validate_suggestion_response_player(self, username):
+        """
+        validates that the username is that of the player who is selected
+        to prove the current suggestion false
+        """
+        if username != self.game.suggestion_response_player:
+            raise errors.SuggestionResponsePlayerInvalidException
+
     def _validate_suspect(self, suspect):
         """
         Validates that a suspect is a valid suspect as
@@ -388,3 +414,21 @@ class GameEngine(object):
         suspect = self.game.current_player.suspect
         if suspect not in self.game.game_board[room].suspects:
             raise errors.SuggestionInvalidRoomException
+
+    def _validate_gamecard_item(self, gamecard_item):
+        """
+        Validates that the gamecard item is a valid game_card
+        """
+        valid_items = game_state.SUSPECTS
+        valid_items += game_state.WEAPONS
+        valid_items += game_state.ROOMS
+
+        if gamecard_item not in valid_items:
+            raise errors.GameCardItemInvalidException
+
+    def _validate_suggestion_response_player_owns_card(self, gamecard_item):
+        cards = self.game.suggestion_response_player.game_cards
+        player_items = [
+            card.item for card in cards]
+        if gamecard_item not in player_items:
+            raise errors.PlayerInvalidGameCardException

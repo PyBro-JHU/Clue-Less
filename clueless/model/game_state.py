@@ -127,7 +127,7 @@ class Player(object):
     Player is an external user fo the system that will be playing the game
     """
     def __init__(self, username, suspect=None,
-                 game_cards=None, cards_seen=None):
+                 game_cards=None, card_items_seen=None):
         self.username = username
         if suspect:
             self.suspect = suspect
@@ -137,10 +137,10 @@ class Player(object):
             self.game_cards = game_cards
         else:
             self.game_cards = list()
-        if cards_seen:
-            self.cards_seen = cards_seen
+        if card_items_seen:
+            self.card_items_seen = card_items_seen
         else:
-            self.cards_seen = list()
+            self.card_items_seen = list()
 
     def format(self):
         """
@@ -152,9 +152,7 @@ class Player(object):
             "game_cards": [
                 game_card.format() for game_card in self.game_cards
             ],
-            "cards_seen": [
-                game_card.format() for game_card in self.cards_seen
-            ]
+            "card_items_seen": self.card_items_seen
         }
 
 
@@ -595,6 +593,4 @@ class GameStateBuilder(object):
         for player_dict in players:
             player_dict["game_cards"] = self._build_game_cards(
                 player_dict["game_cards"])
-            player_dict["game_cards"] = self._build_game_cards(
-                player_dict["cards_seen"])
         return [Player(**player_dict) for player_dict in players]
