@@ -1,5 +1,5 @@
 import unittest
-from clueless import game_state
+from clueless.model import game_state
 
 
 class WhenTestingGameCard(unittest.TestCase):
@@ -32,6 +32,18 @@ class WhenTestingPlayer(unittest.TestCase):
         self.assertEqual(player.suspect, player_dict["suspect"])
         for game_card in player.game_cards:
             self.assertTrue(game_card.format() in player_dict["game_cards"])
+        for game_card in player.cards_seen:
+            self.assertTrue(game_card.format() in player_dict["cards_seen"])
+
+
+class WhenTestingSuggestion(unittest.TestCase):
+    def test_format(self):
+        suggestion = game_state.Suggestion(
+            game_state.PLUM, game_state.REVOLVER, game_state.LIBRARY)
+        suggestion_dict = suggestion.format()
+        self.assertEqual(suggestion.suspect, suggestion_dict["suspect"])
+        self.assertEqual(suggestion.weapon, suggestion_dict["weapon"])
+        self.assertEqual(suggestion.room, suggestion_dict["room"])
 
 
 class WhenTestingGameSpace(unittest.TestCase):
@@ -159,6 +171,14 @@ class WhenTestingGameState(unittest.TestCase):
         self.assertEqual(
             self.game_state.turn_status,
             game_state_dict["turn_status"]
+        )
+        self.assertEqual(
+            self.game_state.current_suggestion,
+            game_state_dict["current_suggestion"]
+        )
+        self.assertEqual(
+            self.game_state.suggestion_response_player,
+            game_state_dict["suggestion_response_player"]
         )
         for game_card in self.game_state.case_file:
             self.assertTrue(
