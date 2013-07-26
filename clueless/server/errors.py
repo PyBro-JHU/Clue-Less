@@ -44,3 +44,27 @@ class SuspectInvalidException(GameEngineException):
     def __init__(self):
         msg = "Invalid Suspect"
         super(SuspectInvalidException, self).__init__(msg)
+
+
+class WeaponInvalidException(GameEngineException):
+    def __init__(self):
+        msg = "Invalid Weapon"
+        super(WeaponInvalidException, self).__init__(msg)
+
+
+class RoomInvalidException(GameEngineException):
+    def __init__(self):
+        msg = "Invalid Room"
+        super(RoomInvalidException, self).__init__(msg)
+
+
+class SuggestionTurnStatusException(GameEngineException):
+    def __init__(self):
+        msg = "Suggestion can not be made when awaiting a move or accusation"
+        super(SuggestionTurnStatusException, self).__init__(msg)
+
+
+class SuggestionInvalidRoomException(GameEngineException):
+    def __init__(self):
+        msg = "Suggestion invalid, player must be in room used in suggestion"
+        super(SuggestionInvalidRoomException, self).__init__(msg)
