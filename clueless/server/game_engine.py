@@ -99,8 +99,9 @@ class GameEngine(object):
 
     def handle_move(self, player_username, suspect, space_name):
         """
-        Handle a players request to move their suspect to a new GameSpace
-        and validates the components of the request.
+        Handle a player's request to move their suspect to a new GameSpace
+        and validates the components of the request.  A player can only move
+        to a connected space, and the space must be available.
         """
 
         #validate the move request
@@ -111,40 +112,87 @@ class GameEngine(object):
         self._validate_space(space_name)
         self._validate_space_available(space_name)
 
-        #retreive the GameSpace objects and move the suspect
+        #retreive the GameSpace objects and
         current_space = self._get_suspect_current_space(suspect)
         new_space = self.game.game_board[space_name]
-        self._move_suspect(suspect, current_space, new_space)
+        self._validate_connected_space(current_space, new_space)
 
-        #change the turn state
-        self.game.turn_status = game_state.AWAITING_SUGGESTION
+        #move the suspect
+        self._move_suspect(suspect, new_space)
 
-        #build notification message for the move, and add prepend to the
+        #build notification message for the move, and prepend to the
         #game_state's player_messages
         message = "{0} moved {1} moved into the {2}".format(
             player_username, suspect, new_space.name)
-        self.game.player_messages.insert(0, message)
+        self._send_player_message(message)
 
-    def handle_suggestion(self, player, suspect, weapon, room):
+        #change the turn state.  If the player has moved to a room
+        #they must make a suggestion, otherwise they must make an
+        # accusation or end their turn
+        if isinstance(new_space, game_state.Room):
+            self.game.turn_status = game_state.AWAITING_SUGGESTION
+        else:
+            self.game.turn_status = game_state.AWAITING_ACCUSATION_OR_END_TURN
+
+    def handle_suggestion(self, player_username, suspect, weapon, room):
+        """
+        Handle a player's suggestion.  A suggestion is made after a player
+        enters a room
+        """
+
+        #validate the suggestion request
+        self._validate_player(player_username)
+        self._validate_player_turn(player_username)
+        self._validate_suspect(suspect)
+        self._validate_weapon(weapon)
+        self._validate_room(room)
+        self._validate_suggestion_turn_status()
+        self._validate_suggestion_room(room)
+
+        #When a suggestion is made bot the suspect and weapon must be
+        #moved to the Room that the player is currently in
+        self._move_suspect(suspect, room)
+        self._move_weapon(weapon, room)
+
+        #create the suggestion:
+        self.game.current_suggestion = game_state.Suggestion(
+            suspect, weapon, room)
+
+        #get the first player that can prove the suggestion false.
+        # If one is found change the turn status to
+        #AWAITING_SUGGESTION_RESPONSE, otherwise change the
+        # turn status to AWAITING_ACCUSATION_OR_END_TURN
+        response_player = self._get_suggestion_response_player()
+        if response_player:
+            self.game.suggestion_response_player = response_player
+            self.game.turn_status = game_state.AWAITING_SUGGESTION_RESPONSE
+        else:
+            self.game.turn_status = game_state.AWAITING_ACCUSATION_OR_END_TURN
+
+    def handle_suggestion_response(self, player_username, game_card):
         pass
 
-    def handle_suggestion_response(self, player, game_card):
+    def handle_accusation(self, player_username, suspect, weapon, room):
         pass
 
-    def handle_accusation(self, player, suspect, weapon, room):
+    def handle_end_turn(self, player_username):
         pass
 
-    def handle_end_turn(self, player):
-        pass
-
-    def _move_suspect(self, suspect, current_space, new_space):
+    def _move_suspect(self, suspect, new_space):
+        current_space = self._get_suspect_current_space(suspect)
         current_space.suspects.remove(suspect)
         new_space.suspects.append(suspect)
 
-    def _move_weapon(self):
-        pass
+    def _move_weapon(self, weapon, room):
+        current_room = self._get_weapon_current_space(weapon)
+        current_room.weapons.remove(weapon)
+        room.weapons.append(weapon)
 
     def _next_turn(self):
+        """
+        update the game's current_player and turn status
+        for the next player's turn
+        """
         turn_index = self.game.turn_list.index(self.game.current_player)
         if turn_index < (len(self.game.turn_list)-1):
             turn_index += 1
@@ -152,6 +200,82 @@ class GameEngine(object):
             turn_index = 0
         self.game.current_player = self.game.turn_list[turn_index]
         self.game.turn_status = game_state.AWAITING_MOVE
+
+    def _get_next_player_index(self):
+        """
+        Get th eindex of the nex player in the turn list
+        """
+        turn_index = self.game.turn_list.index(self.game.current_player)
+        if turn_index < (len(self.game.turn_list)-1):
+            turn_index += 1
+        else:
+            turn_index = 0
+
+        return turn_index
+
+    def _get_suspect_current_space(self, suspect):
+        """
+        Returns the GameSpace object that the suspect currently occupies
+        """
+        for space in self.game.game_board:
+            if suspect in self.game.game_board[space].suspects:
+                return self.game.game_board[space]
+
+    def _get_weapon_current_space(self, weapon):
+        """
+        Returns the GameSpace object that the weapon is currently in
+        """
+        rooms = [
+            room for room in self.game.game_board
+            if isinstance(room, game_state.Room)
+        ]
+        for room in rooms:
+            if weapon in self.game.game_board[room].weapons:
+                return self.game.game_board[room]
+
+    def _get_suggestion_response_player(self):
+        """
+        Returns the player that must respond to the suggestion, otherwise None.
+        Suggestions are responded to by the next player in turn if they have
+        a card that proves the suggestion false.  If the next player can not
+        prove the suggestion false it moves to the next player until one is
+        found.  If no players are found, teh method returns None.
+        """
+        #create a list of all players except the player whose turn it is
+        suggestion_players = [
+            player for player in self.game.players
+            if player is not self.game.current_player
+        ]
+
+        #create a list of the items in the suggestion
+        suggestion_items = [
+            self.game.current_suggestion.suspect,
+            self.game.current_suggestion.weapon,
+            self.game.current_suggestion.room
+        ]
+
+        #iterate through the list of the other players
+        for player in suggestion_players:
+            #create a list of the items in the player's game_cards list
+            player_card_items = [
+                card.item for card in player.game_cards
+            ]
+            #create a set intersection and test it as a conditional
+            #to determine if the player has any of the cards in the suggestion.
+            #if there is a match, return the player.
+            if list(set(suggestion_items) & set(player_card_items)):
+                return player
+
+        #If none of the players had game_cards that can prove the
+        # suggestion false, return None
+        return None
+
+    def _send_player_message(self, message):
+        """
+        Updates the list used to provide notifications to players by
+        prepending the newest message to the list
+        """
+        self.game.player_messages.insert(0, message)
 
     def _validate_player(self, username):
         """
@@ -207,10 +331,35 @@ class GameEngine(object):
         if connected_space.name not in current_space.connected_spaces:
             raise errors.GameSpaceNotConnectedException
 
-    def _get_suspect_current_space(self, suspect):
+    def _validate_weapon(self, weapon):
         """
-        Returns the GameSpace object that the suspect currently occupies
+        Validates that a weapon is a valid weapon as
+        defined in the game_state module
         """
-        for space in self.game.game_board:
-            if suspect in self.game.game_board[space].suspects:
-                return self.game.game_board[space]
+        if weapon not in game_state.WEAPONS:
+            raise errors.WeaponInvalidException
+
+    def _validate_room(self, room):
+        """
+        Validates that a room is a valid room as
+        defined in the game_state module
+        """
+        if room not in game_state.ROOMS:
+            raise errors.RoomInvalidException
+
+    def _validate_suggestion_turn_status(self):
+        """
+        Validate that the suggestion is being made only when when
+        the turn_status is AWAITING_SUGGESTION
+        """
+        if self.game.turn_status != game_state.AWAITING_SUGGESTION:
+            raise errors.SuggestionTurnStatusException
+
+    def _validate_suggestion_room(self, room):
+        """
+        Validates that the player is currently in the Room that
+        is used in the suggestion
+        """
+        suspect = self.game.current_player.suspect
+        if suspect not in self.game.game_board[room].suspects:
+            raise errors.SuggestionInvalidRoomException

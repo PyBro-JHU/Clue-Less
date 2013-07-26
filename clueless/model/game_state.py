@@ -100,6 +100,8 @@ HALLWAYS = [
 AWAITING_MOVE = "Waiting for player to move"
 AWAITING_SUGGESTION = "Waiting for player to make suggestion"
 AWAITING_SUGGESTION_RESPONSE = "Waiting for response to player suggestion"
+AWAITING_ACCUSATION_OR_END_TURN = \
+    "Waiting for player to make accusation or end turn"
 
 
 class GameCard(object):
