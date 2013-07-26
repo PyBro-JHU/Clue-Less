@@ -122,7 +122,7 @@ class GameEngine(object):
 
         #build notification message for the move, and prepend to the
         #game_state's player_messages
-        message = "{0} moved {1} moved into the {2}".format(
+        message = "{0} moved {1} into the {2}".format(
             player_username, suspect, new_space.name)
         self._send_player_message(message)
 
@@ -131,8 +131,15 @@ class GameEngine(object):
         # accusation or end their turn
         if isinstance(new_space, game_state.Room):
             self.game.turn_status = game_state.AWAITING_SUGGESTION
+            message = "Player {0} must nake a suggestion.".format(
+                player_username)
+            self._send_player_message(message)
         else:
             self.game.turn_status = game_state.AWAITING_ACCUSATION_OR_END_TURN
+            message = "Player {0} must nake an accusation " \
+                "or end their turn.".format(
+                player_username)
+            self._send_player_message(message)
 
     def handle_suggestion(self, player_username, suspect, weapon, room):
         """
@@ -158,6 +165,11 @@ class GameEngine(object):
         self.game.current_suggestion = game_state.Suggestion(
             suspect, weapon, room)
 
+        message = "Player {0} suggests that the murder was committed by " \
+            "{1} with the {2} in the {3}".format(
+            player_username, suspect, weapon, room)
+        self._send_player_message(message)
+
         #get the first player that can prove the suggestion false.
         # If one is found change the turn status to
         #AWAITING_SUGGESTION_RESPONSE, otherwise change the
@@ -166,10 +178,23 @@ class GameEngine(object):
         if response_player:
             self.game.suggestion_response_player = response_player
             self.game.turn_status = game_state.AWAITING_SUGGESTION_RESPONSE
+            message = "Player {0} must prove the suggestion false.".format(
+                response_player.name)
+            self._send_player_message(message)
         else:
             self.game.turn_status = game_state.AWAITING_ACCUSATION_OR_END_TURN
+            message = "There is no player that can prove the suggestion false."
+            self._send_player_message(message)
+            message = "Player {0} must nake an accusation " \
+                "or end their turn.".format(
+                player_username)
+            self._send_player_message(message)
 
-    def handle_suggestion_response(self, player_username, game_card):
+    def handle_suggestion_response(self, player_username, game_card_item):
+        """
+        Handles a suggestion response that will prove
+        the current player's suggestion false
+        """
         pass
 
     def handle_accusation(self, player_username, suspect, weapon, room):
@@ -239,7 +264,7 @@ class GameEngine(object):
         Suggestions are responded to by the next player in turn if they have
         a card that proves the suggestion false.  If the next player can not
         prove the suggestion false it moves to the next player until one is
-        found.  If no players are found, teh method returns None.
+        found.  If no players are found, the method returns None.
         """
         #create a list of all players except the player whose turn it is
         suggestion_players = [

@@ -68,3 +68,9 @@ class SuggestionInvalidRoomException(GameEngineException):
     def __init__(self):
         msg = "Suggestion invalid, player must be in room used in suggestion"
         super(SuggestionInvalidRoomException, self).__init__(msg)
+
+
+class SuggestionResponsePlayerInvalidException(GameEngineException):
+    def __init__(self):
+        msg = "Invalid, not the correct player to respond to suggestion"
+        super(SuggestionResponsePlayerInvalidException, self).__init__(msg)
