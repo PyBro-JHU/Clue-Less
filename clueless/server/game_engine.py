@@ -216,17 +216,72 @@ class GameEngine(object):
         self._send_player_message(message)
 
     def handle_accusation(self, player_username, suspect, weapon, room):
-        pass
+        """
+        Handles player's accusation in attempt to win the game
+        """
+        self._validate_player(player_username)
+        self._validate_player_turn(player_username)
+        self._validate_suspect(suspect)
+        self._validate_weapon(weapon)
+        self._validate_room(room)
+
+        message = "Player {0} has made the accusation that the murder was " \
+            "committed by {1} with the {2} in the {3}".format(
+            player_username, suspect, weapon, room)
+        self._send_player_message(message)
+
+        accusation_items = [suspect, weapon, room]
+        winning_items = [card.item for card in self.game.case_file]
+
+        #compare tha accusation to the wiining items, if the accusation
+        #is correct then end the game and mark the winner
+        if set(accusation_items) == set(winning_items):
+            self.game.game_active = False
+            self.game.game_winner = self.game.current_player
+            message = "Player {0} has won the game!!!.".format(
+                player_username)
+            self._send_player_message(message)
+
+        #if the accusation is false, remove the player form the turn list.
+        #The player can still respond to suggestions but no longer has a turn,
+        #and cannot win the game
+        else:
+            self.game.turn_list.remove(self.game.current_player)
+            message = "Player {0} has made a false accusation and can no " \
+                "longer win the game.  All future turns are forfeited, " \
+                "but the player must make still prove suggestions false if " \
+                "asked.".format(player_username)
+        self._send_player_message(message)
 
     def handle_end_turn(self, player_username):
-        pass
+        """
+        Handle a request made to end the current player's turn
+        """
+
+        #validate the request
+        self._validate_player(player_username)
+        self._validate_player_turn(player_username)
+        self._validate_end_turn_status()
+
+        message = "Player {0} has ended their turn.".format(
+            player_username)
+        self._send_player_message(message)
+
+        #move the turn to the next player
+        self._next_turn()
 
     def _move_suspect(self, suspect, new_space):
+        """
+        Move suspect from their current space to the selected space
+        """
         current_space = self._get_suspect_current_space(suspect)
         current_space.suspects.remove(suspect)
         new_space.suspects.append(suspect)
 
     def _move_weapon(self, weapon, room):
+        """
+        Move weapon from its current room to the selected room
+        """
         current_room = self._get_weapon_current_space(weapon)
         current_room.weapons.remove(weapon)
         room.weapons.append(weapon)
@@ -244,9 +299,32 @@ class GameEngine(object):
         self.game.current_player = self.game.turn_list[turn_index]
         self.game.turn_status = game_state.AWAITING_MOVE
 
+        message = "Player {0} has begun their turn, now awaiting move.".format(
+            self.game.current_player.name)
+        self._send_player_message(message)
+
+        #check if the new player has any moves available by
+        #checking the connected_spaces
+        current_space = self._get_suspect_current_space(
+            self.game.current_player.suspect)
+
+        move_available = False
+        for space in current_space.connected_spaces:
+            if self.game.game_board[space].is_available():
+                move_available = True
+
+        #If player has no available spaces to move to, they must make an
+        #accusation or end their turn
+        if not move_available:
+            self.turn_status = game_state.AWAITING_ACCUSATION_OR_END_TURN
+        message = "Player {0} has no available spaces to move to. {1}.".format(
+            self.game.current_player.name,
+            game_state.AWAITING_ACCUSATION_OR_END_TURN)
+        self._send_player_message(message)
+
     def _get_next_player_index(self):
         """
-        Get th eindex of the nex player in the turn list
+        Get the index of the nex player in the turn list
         """
         turn_index = self.game.turn_list.index(self.game.current_player)
         if turn_index < (len(self.game.turn_list)-1):
@@ -432,3 +510,7 @@ class GameEngine(object):
             card.item for card in cards]
         if gamecard_item not in player_items:
             raise errors.PlayerInvalidGameCardException
+
+    def _validate_end_turn_status(self):
+        if self.game.turn_status != game_state.AWAITING_ACCUSATION_OR_END_TURN:
+            raise errors.EndTurnStatusException

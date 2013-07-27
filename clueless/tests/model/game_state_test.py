@@ -185,6 +185,15 @@ class WhenTestingGameState(unittest.TestCase):
             self.assertTrue(
                 game_card.format() in game_state_dict["case_file"]
             )
+        self.assertEqual(
+            self.game_state.game_active,
+            game_state_dict["game_active"]
+        )
+        if self.game_state.game_winner:
+            self.assertEqual(
+                self.game_state.game_winner.format(),
+                game_state_dict["game_winner"]
+            )
         for space in self.game_state.game_board:
             self.assertTrue(space.format() in game_state_dict["game_board"])
 
