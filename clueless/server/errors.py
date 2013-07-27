@@ -68,3 +68,21 @@ class SuggestionInvalidRoomException(GameEngineException):
     def __init__(self):
         msg = "Suggestion invalid, player must be in room used in suggestion"
         super(SuggestionInvalidRoomException, self).__init__(msg)
+
+
+class SuggestionResponsePlayerInvalidException(GameEngineException):
+    def __init__(self):
+        msg = "Invalid, not the correct player to respond to suggestion"
+        super(SuggestionResponsePlayerInvalidException, self).__init__(msg)
+
+
+class GameCardItemInvalidException(GameEngineException):
+    def __init__(self):
+        msg = "Item is not a valid GameCard item"
+        super(GameCardItemInvalidException, self).__init__(msg)
+
+
+class PlayerInvalidGameCardException(GameEngineException):
+    def __init__(self):
+        msg = "Player does not own the game_card provided in request"
+        super(PlayerInvalidGameCardException, self).__init__(msg)

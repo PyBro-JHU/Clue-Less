@@ -32,8 +32,9 @@ class WhenTestingPlayer(unittest.TestCase):
         self.assertEqual(player.suspect, player_dict["suspect"])
         for game_card in player.game_cards:
             self.assertTrue(game_card.format() in player_dict["game_cards"])
-        for game_card in player.cards_seen:
-            self.assertTrue(game_card.format() in player_dict["cards_seen"])
+        for game_card in player.card_items_seen:
+            self.assertTrue(
+                game_card.format() in player_dict["card_items_seen"])
 
 
 class WhenTestingSuggestion(unittest.TestCase):
