@@ -1,6 +1,6 @@
 import random
 import uuid
-from clueless import datastore
+from clueless import data
 from clueless.model import game_state
 from clueless.server import errors
 
@@ -78,7 +78,7 @@ class GameEngine(object):
         self.players = dict()
         self.game_id = uuid.uuid4()
         self.game = None
-        self.db_handler = datastore.get_db_handler()
+        self.db_handler = data.get_db_handler()
 
     def register_player(self, username):
         """
