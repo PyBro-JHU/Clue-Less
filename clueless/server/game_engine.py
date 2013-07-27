@@ -1,5 +1,6 @@
 import random
 import uuid
+from clueless import data
 from clueless.model import game_state
 from clueless.server import errors
 
@@ -73,19 +74,29 @@ class CardDeck(object):
 
 class GameEngine(object):
 
-    def __init__(self, players):
+    def __init__(self):
         self.players = dict()
         self.game_id = uuid.uuid4()
         self.game = None
+        self.db_handler = data.get_db_handler()
 
     def register_player(self, username):
+        """
+        registers a new player with the GameEngine before the game starts
+        """
         self.players[username] = game_state.Player(username)
 
     def choose_suspect(self, username, suspect):
+        """
+        allows the player to choose their suspect before the game starts
+        """
         self._validate_suspect(suspect)
         self.players[username].suspect = suspect
 
     def start_new_game(self):
+        """
+        Starts a new game with all the registered players
+        """
 
         game_players = [self.players[key] for key in self.players]
         self.game = game_state.GameState(game_players)
@@ -101,15 +112,37 @@ class GameEngine(object):
         for x in range(num_players):
             self.game.players[x].game_cards = hands[x]
 
+        self.db_handler.insert_document(
+            object_name='game', document=self.game.format())
+
     def destroy_game(self):
+        """
+        Destroys the current Game and deletes form datastore
+        """
         self.game = None
         self.players = dict()
+        self.db_handler.delete_document(
+            object_name='game', query_filter={"game_id": self.game_id})
 
     def load_game(self, game_id):
-        pass
+        """
+        Loads the specified GameState from the datastore
+        """
+        self.game_id = game_id
+        game_dict = self.db_handler.get_document(
+            object_name='game', query_filter={"game_id": self.game_id})
+
+        game_builder = game_state.GameStateBuilder()
+        self.game = game_builder.build_gamestate_from_dict(game_dict)
 
     def save_game(self):
-        pass
+        """
+        Saves the GameState of the current game to the datastore
+        """
+        self.db_handler.update_document(
+            object_name='game', document=self.game.format(),
+            query_filter={"game_id": self.game_id}
+        )
 
     def handle_move(self, player_username, suspect, space_name):
         """

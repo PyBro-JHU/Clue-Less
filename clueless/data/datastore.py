@@ -1,5 +1,9 @@
 from pymongo import MongoClient
 
+STATUS_NEW = 'NEW'
+STATUS_CONNECTED = 'CONNECTED'
+STATUS_CLOSED = 'CLOSED'
+
 
 class DatabaseHandler():
     """
@@ -13,20 +17,22 @@ class DatabaseHandler():
         """
         self.server = 'localhost:27017'
         self.database_name = 'clueless'
-        self._connect()
+        self.status = STATUS_NEW
 
-    def _connect(self):
+    def connect(self):
         """
         Creates a connection with the MongoDB server and database
         """
         self.connection = MongoClient(self.server)
         self.database = self.connection[self.database_name]
+        self.status = STATUS_CONNECTED
 
     def close(self):
         """
         Closes the connection to the MongoDB server
         """
         self.connection.close()
+        self.status = STATUS_CLOSED
 
     def insert_document(self, object_name, document=None):
         """

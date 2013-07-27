@@ -153,10 +153,12 @@ class WhenTestingGameState(unittest.TestCase):
                 suspect=game_state.PEACOCK,
                 game_cards=self.game_cards2)
         ]
-        self.game_state = game_state.GameState(players=self.players)
+        self.game_state = game_state.GameState(game_id="12345",
+                                               players=self.players)
 
     def test_format(self):
         game_state_dict = self.game_state.format()
+        self.assertEqual(self.game_state.game_id, game_state_dict["game_id"])
         for player in self.game_state.players:
             self.assertTrue(player.format() in game_state_dict["players"])
         self.assertEqual(
@@ -213,7 +215,8 @@ class WhenTestingGameStateBuilder(unittest.TestCase):
 
     def test_create_game_state_from_dict(self):
         self.maxDiff = None
-        self.game_state = game_state.GameState(self.players)
+        self.game_state = game_state.GameState(game_id="12345",
+                                               players=self.players)
         game_state_dict = self.game_state.format()
         builder = game_state.GameStateBuilder()
         game_state_built = builder.build_gamestate_from_dict(game_state_dict)
