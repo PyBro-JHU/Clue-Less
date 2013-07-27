@@ -264,28 +264,40 @@ class GameState(object):
     def __init__(self, players, player_messages=None, turn_list=None,
                  current_player=None, turn_status=None,
                  current_suggestion=None, suggestion_response_player=None,
-                 case_file=None, game_board=None):
+                 case_file=None, game_active=True, game_winner=None,
+                 game_board=None):
 
+        #players in the game
         self.players = players
         if player_messages:
             self.player_messages = player_messages
         else:
             self.player_messages = list()
+
+        #Players in order fo turn
         if turn_list:
             self.turn_list = turn_list
         else:
             self.turn_list = list(players)
+
+        #The player who has the current turn
         if current_player:
             self.current_player = current_player
         else:
             self.current_player = self.turn_list[0]
+
+        #The status fo the current turn which includes:
+        #AWAITING_MOVE, AWAITING_SUGGESTION, AWAITING_SUGGESTION_RESPONSE,
+        #or AWAITING_ACCUSATION_OR_END_TURN
         if turn_status:
             self.turn_status = turn_status
         else:
             self.turn_status = AWAITING_MOVE
 
+        #Holds a suggestion that is awaiting a response
         self.current_suggestion = current_suggestion
 
+        #The player that must respond to the suggestion
         self.suggestion_response_player = suggestion_response_player
 
         #holds the winning cards
@@ -293,6 +305,12 @@ class GameState(object):
             self.case_file = case_file
         else:
             self.case_file = list()
+
+        #whether the game is a live game or has finished
+        self.game_active = game_active
+
+        #holds the Player that is thefinal winner of the game
+        self.game_winner = game_winner
 
         #The game_board is a collections of HomeSquares, Rooms, and Hallways,
         #and defines their relation to one another on the game board
@@ -522,6 +540,9 @@ class GameState(object):
             self.suggestion_response_player.format()
             if self.suggestion_response_player else None,
             "case_file": [card.format() for card in self.case_file],
+            "game_active": self.game_active,
+            "game_winner":
+            self.game_winner.format() if self.game_winner else None,
             "game_board": {
                 key: (self.game_board[key]).format()
                 for key in self.game_board
@@ -568,6 +589,12 @@ class GameStateBuilder(object):
         #build the list of winning GameCard objects
         game_state["case_file"] = self._build_game_cards(
             game_state["case_file"])
+
+        if game_state["game_winner"]:
+            game_state["game_winner"] = [
+                player for player in game_state["players"]
+                if player.username == game_state["game_winner"]["username"]
+            ][0]
 
         game_board = dict()
         #assign the lists of newly created gamespace objects to the game_board

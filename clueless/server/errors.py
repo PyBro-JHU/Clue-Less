@@ -86,3 +86,9 @@ class PlayerInvalidGameCardException(GameEngineException):
     def __init__(self):
         msg = "Player does not own the game_card provided in request"
         super(PlayerInvalidGameCardException, self).__init__(msg)
+
+
+class EndTurnStatusException(GameEngineException):
+    def __init__(self):
+        msg = "Player can not end_turn, awaiting other action"
+        super(EndTurnStatusException, self).__init__(msg)
