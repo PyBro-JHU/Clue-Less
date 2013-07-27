@@ -261,11 +261,14 @@ class GameState(object):
     GameState  creates all properties necessary to
     observe the state fo the Game in play
     """
-    def __init__(self, players, player_messages=None, turn_list=None,
+    def __init__(self, game_id, players, player_messages=None, turn_list=None,
                  current_player=None, turn_status=None,
                  current_suggestion=None, suggestion_response_player=None,
                  case_file=None, game_active=True, game_winner=None,
                  game_board=None):
+
+        #Unique ID for a game
+        self.game_id = game_id
 
         #players in the game
         self.players = players
@@ -524,6 +527,7 @@ class GameState(object):
         format the object as a dictionary.
         """
         return {
+            "game_id": self.game_id,
             "players": [
                 player.format() for player in self.players
             ],
