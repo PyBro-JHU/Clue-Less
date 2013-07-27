@@ -1,4 +1,5 @@
 import random
+import uuid
 from clueless.model import game_state
 from clueless.server import errors
 
@@ -73,12 +74,21 @@ class CardDeck(object):
 class GameEngine(object):
 
     def __init__(self, players):
-        self.players = players
+        self.players = dict()
+        self.game_id = uuid.uuid4()
         self.game = None
 
-    def start_new_game(self):
-        self.game = game_state.GameState(self.players)
+    def register_player(self, username):
+        self.players[username] = game_state.Player(username)
 
+    def choose_suspect(self, username, suspect):
+        self._validate_suspect(suspect)
+        self.players[username].suspect = suspect
+
+    def start_new_game(self):
+
+        game_players = [self.players[key] for key in self.players]
+        self.game = game_state.GameState(game_players)
         card_deck = CardDeck()
 
         #poplate the case file with the winning cards
@@ -91,7 +101,11 @@ class GameEngine(object):
         for x in range(num_players):
             self.game.players[x].game_cards = hands[x]
 
-    def load_game(self):
+    def destroy_game(self):
+        self.game = None
+        self.players = dict()
+
+    def load_game(self, game_id):
         pass
 
     def save_game(self):
