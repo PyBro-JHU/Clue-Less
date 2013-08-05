@@ -10,9 +10,9 @@ SUSPECT = 'Suspect'
 MUSTARD = 'Colonel Mustard'
 SCARLET = 'Miss Scarlet'
 PLUM = 'Professor Plum'
-GREEN = 'Mr. Green'
-WHITE = 'Mrs. White'
-PEACOCK = 'Mrs. Peacock'
+GREEN = 'Mr Green'
+WHITE = 'Mrs White'
+PEACOCK = 'Mrs Peacock'
 
 SUSPECTS = [
     MUSTARD,

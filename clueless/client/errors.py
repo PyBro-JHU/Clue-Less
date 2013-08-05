@@ -1,0 +1,4 @@
+
+
+class GameClientException(Exception):
+    pass
