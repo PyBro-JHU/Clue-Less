@@ -76,30 +76,30 @@ class GameEngine(object):
 
     def __init__(self):
         self.players = dict()
-        self.game_id = uuid.uuid4()
+        self.game_id = None
         self.game = None
         self.db_handler = data.get_db_handler()
 
-    def register_player(self, username):
+    def handle_register_player(self, username):
         """
         registers a new player with the GameEngine before the game starts
         """
         self.players[username] = game_state.Player(username)
 
-    def choose_suspect(self, username, suspect):
+    def handle_choose_suspect(self, username, suspect):
         """
         allows the player to choose their suspect before the game starts
         """
         self._validate_suspect(suspect)
         self.players[username].suspect = suspect
 
-    def start_new_game(self):
+    def handle_start_new_game(self):
         """
         Starts a new game with all the registered players
         """
-
+        self.game_id = str(uuid.uuid4())
         game_players = [self.players[key] for key in self.players]
-        self.game = game_state.GameState(game_players)
+        self.game = game_state.GameState(self.game_id, game_players)
         card_deck = CardDeck()
 
         #poplate the case file with the winning cards
@@ -114,6 +114,8 @@ class GameEngine(object):
 
         self.db_handler.insert_document(
             object_name='game', document=self.game.format())
+
+        return self.game_id
 
     def destroy_game(self):
         """
