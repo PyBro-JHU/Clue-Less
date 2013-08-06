@@ -12,9 +12,6 @@ from kivy.uix.label import Label
 from kivy.uix.popup import Popup
 from kivy.uix.spinner import Spinner
 
-class LoginScreen(Screen):
-    pass
-
 class StartScreen(Screen):
     pass
 
@@ -68,7 +65,7 @@ class InstrumentPanel(FloatLayout):
         p = SuggestionPopup()
         p.open()
         
-    def prove_suggestion(self):
+    def disprove_suggestion_popup(self):
         btnclose = Button(text='Submit', size_hint_y=None, height='50sp')
         content = BoxLayout(orientation='vertical', padding=10, spacing=10)
         content.add_widget(Label(text='Miss Scarlet suggested Colonel \nMustard in Library with Revolver.'))
@@ -93,7 +90,6 @@ class CluelessApp(App):
     def build(self):
         root = ScreenManager()
         root.transition = WipeTransition()
-        root.add_widget(LoginScreen(name="login"))
         root.add_widget(StartScreen(name="start"))
         root.add_widget(GameScreen(name="game"))
         return root

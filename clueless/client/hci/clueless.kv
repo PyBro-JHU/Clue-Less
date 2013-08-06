@@ -1,8 +1,8 @@
 #:kivy 1.0
 #:import kivy kivy
 #:import WipeTransition kivy.uix.screenmanager.WipeTransition
-
-<LoginScreen>:
+                
+<StartScreen>:
     canvas:
         Color:
             rgb: 1, 1, 1
@@ -27,51 +27,19 @@
                 multiline: False
                 size_hint: 1, 1
             Label:
-                text: "Let's Play Clue-less!"
-            Button:
-                text: 'Login'
-                on_release: root.manager.current = root.manager.next()
-                
-<StartScreen>:
-    canvas:
-        Color:
-            rgb: 1, 1, 1
-    GridLayout:
-        cols: 2
-        rows: 1
-        row_force_default: True
-        row_default_height: 250
-        Image:
-            size_hint: 1, 1
-            source: 'resources/pyBro_logo.png'
-        GridLayout:
-            cols: 2
-            row_force_default: True
-            row_default_height: 35
-            padding: '20dp'
-            spacing: '10dp'
-            Label:
-                text: 'Start New'
-            Label:
-                text: ''
-            Label:
-                text: 'Enter Game Name:'
-            TextInput:
-                multiline: False
-                size_hint: 1, 1
-            Label:
-                text: 'Select Player:'
+                text: 'Select Suspect:'
             Spinner:
                 size_hint_y: None
                 height: 34
                 text: ''
                 values: 'Miss Scarlet', 'Colonel Mustard', 'Professor Plum', 'Mr. Green', 'Mrs. White', 'Mrs. Peacock'
             Label:
-                text: ''
+                text: 'Enter Game Name:'
+            TextInput:
+                multiline: False
+                size_hint: 1, 1
             Label:
-                text: ''
-            Label:
-                text: 'Join an Existing Game'
+                text: 'Or join an Existing Game'
             Label:
                 text: ''
             Label:
@@ -82,21 +50,9 @@
                 text: ''
                 values: 'Game Name 1', 'Game Name 2'
             Label:
-                text: 'Select Player:'
-            Spinner:
-                size_hint_y: None
-                height: 34
-                text: ''
-                values: 'Miss Scarlet', 'Colonel Mustard', 'Professor Plum', 'Mr. Green', 'Mrs. White', 'Mrs. Peacock'
-            Label:
                 text: ''                
             Label:
                 text: ''                
-            Button:
-                size_hint_y: None
-                height: 34
-                text: 'Logout'
-                on_release: root.manager.current = root.manager.previous()
             Button:
                 size_hint_y: None
                 height: 34
