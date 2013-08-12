@@ -3,9 +3,12 @@
 #:import WipeTransition kivy.uix.screenmanager.WipeTransition
                 
 <StartScreen>:
+    username: user_name
+    suspect: suspect_selected
+    
     canvas:
         Color:
-            rgb: 1, 1, 1
+            rgb: 0, 0, 0
     GridLayout:
         cols: 2
         rows: 1
@@ -24,31 +27,36 @@
                 size_hint: 1, 1
                 text: 'Username'
             TextInput:
+                id: user_name
                 multiline: False
                 size_hint: 1, 1
+                text: 'TestUser'
             Label:
                 text: 'Select Suspect:'
             Spinner:
+                id: suspect_selected
                 size_hint_y: None
                 height: 34
-                text: ''
+                text: 'Miss Scarlet'
                 values: 'Miss Scarlet', 'Colonel Mustard', 'Professor Plum', 'Mr. Green', 'Mrs. White', 'Mrs. Peacock'
-            Label:
-                text: 'Enter Game Name:'
-            TextInput:
-                multiline: False
-                size_hint: 1, 1
-            Label:
-                text: 'Or join an Existing Game'
-            Label:
-                text: ''
-            Label:
-                text: 'Select Game:'
-            Spinner:
-                size_hint_y: None
-                height: 34
-                text: ''
-                values: 'Game Name 1', 'Game Name 2'
+            #Label:
+            #    text: 'Enter Game Name:'
+            #TextInput:
+            #    id: game_name
+            #    multiline: False
+            #    size_hint: 1, 1
+            #    text: 'Game1'
+            #Label:
+            #    text: 'Or join an Existing Game'
+            #Label:
+            #    text: ''
+            #Label:
+            #    text: 'Select Game:'
+            #Spinner:
+            #    size_hint_y: None
+            #    height: 34
+            #    text: ''
+            #    values: 'Game Name 1', 'Game Name 2'
             Label:
                 text: ''                
             Label:
@@ -57,10 +65,13 @@
                 size_hint_y: None
                 height: 34
                 text: 'Play!'
-                on_release: root.manager.current = root.manager.next()
+                #on_release: root.manager.current = root.manager.next()
+                on_release: root.register_player()
 
 <GameScreen>:
-    content: content
+    gameboard: gameboard
+    controls: controls
+    
     canvas:
         Color:
             rgb: 1, 1, 1
@@ -75,7 +86,9 @@
             orientation: 'horizontal'
             padding: '10dp'
             spacing: '10dp'
-            size_hint_y: 0.1
+            size_hint: 1, None
+            pos_hint: {'top': 1}
+            height: '44dp'
             Image:
                 size_hint: None, None
                 size: '24dp', '24dp'
@@ -97,68 +110,189 @@
                 on_release: root.manager.current = root.manager.previous()
 
         BoxLayout:
-            id: content
             orientation: 'horizontal'
             Gameboard:
                 id: gameboard
-            InstrumentPanel:
-                id: instruments
+                size_hint: 1, 1
+            ControlPanel:
+                id: controls
+
+<GamePiece>:
+    size: 15, 15
+            
+<GameTile>
+    background_down: 'resources/pyBro_logo.png'
+    center: self.center
 
 <Gameboard>:
+    scarlet: red_icon
+    mustard: yellow_icon
+    plum: purple_icon
+    green: green_icon
+    white: white_icon
+    peacock: blue_icon
+    
+    study: study_0
+    study_hall: hallway_1
+    hall: hall_2
+    hall_lounge: hallway_3
+    lounge: lounge_4
+    study_library: hallway_5
+    study_billiard: secret_passage_6
+    hall_billiard: hallway_7
+    lounge_billiard: secret_passage_8
+    lounge_dining: hallway_9
+    library: library_10
+    library_billiard: hallway_11
+    billiard_room: billiard_room_12
+    billiard_dining: hallway_13
+    dining_room: dining_room_14
+    library_conservatory: hallway_15
+    conservatory_billiard: secret_passage_16
+    billiard_ballroom: hallway_17
+    kitchen_billiard: secret_passage_18
+    dining_kitchen: hallway_19
+    conservatory: conservatory_20
+    conservatory_ballroom: hallway_21
+    ballroom: ballroom_22
+    ballroom_kitchen: hallway_23
+    kitchen: kitchen_24
+    
     GridLayout:
         cols: 5
-        Button:
+        GameTile:
+            id: study_0
             background_normal: 'resources/study.png'
-        Button:
+            on_release: root.debug()
+        GameTile:
+            id: hallway_1
             background_normal: 'resources/hallway_horizontal.png'
-        Button:
+        GameTile:
+            id: hall_2
             background_normal: 'resources/hall.png'
-        Button:
+        GameTile:
+            id: hallway_3
             background_normal: 'resources/hallway_horizontal.png'
-        Button:
+        GameTile:
+            id: lounge_4
             background_normal: 'resources/lounge.png'
-        Button:
+        GameTile:
+            id: hallway_5
             background_normal: 'resources/hallway_vertical.png'
-        Button:
+        GameTile:
+            id: secret_passage_6
             background_normal: 'resources/pyBro_logo-gray.jpg'
-        Button:
+        GameTile:
+            id: hallway_7
             background_normal: 'resources/hallway_vertical.png'
-        Button:
+        GameTile:
+            id: secret_passage_8
             background_normal: 'resources/pyBro_logo-gray.jpg'
-        Button:
+        GameTile:
+            id: hallway_9
             background_normal: 'resources/hallway_vertical.png'
-        Button:
+        GameTile:
+            id: library_10
             background_normal: 'resources/library.png'
-        Button:
+        GameTile:
+            id: hallway_11
             background_normal: 'resources/hallway_horizontal.png'
-        Button:
+        GameTile:
+            id: billiard_room_12
             background_normal: 'resources/billiards_room.png'
-        Button:
+        GameTile:
+            id: hallway_13
             background_normal: 'resources/hallway_horizontal.png'
-        Button:
+        GameTile:
+            id: dining_room_14
             background_normal: 'resources/dining_room.png'
-        Button:
+        GameTile:
+            id: hallway_15
             background_normal: 'resources/hallway_vertical.png'
-        Button:
+        GameTile:
+            id: secret_passage_16
             background_normal: 'resources/pyBro_logo-gray.jpg'
-        Button:
+        GameTile:
+            id: hallway_17
             background_normal: 'resources/hallway_vertical.png'
-        Button:
+        GameTile:
+            id: secret_passage_18
             background_normal: 'resources/pyBro_logo-gray.jpg'
-        Button:
+        GameTile:
+            id: hallway_19
             background_normal: 'resources/hallway_vertical.png'
-        Button:
+        GameTile:
+            id: conservatory_20
             background_normal: 'resources/conservatory.png'
-        Button:
+        GameTile:
+            id: hallway_21
             background_normal: 'resources/hallway_horizontal.png'
-        Button:
+        GameTile:
+            id: ballroom_22
             background_normal: 'resources/ballroom.png'
-        Button:
+        GameTile:
+            id: hallway_23
             background_normal: 'resources/hallway_horizontal.png'
-        Button:
+        GameTile:
+            id: kitchen_24
             background_normal: 'resources/kitchen.png'
+            
+    GamePiece:
+        id: white_icon
+        canvas:
+            Color:
+                rgb: 1, 1, 1
+            Ellipse:
+                pos: self.pos
+                size: 15, 15
+    GamePiece:
+        id: red_icon
+        canvas:
+            Color:
+                rgb: 1, 0, 0
+            Ellipse:
+                pos: self.pos
+                size: 15, 15
+    GamePiece:
+        id: yellow_icon
+        canvas:
+            Color:
+                rgb: 1, 1, 0
+            Ellipse:
+                pos: self.pos
+                size: 15, 15
+    GamePiece:
+        id: purple_icon
+        canvas:
+            Color:
+                rgb: 1, 0, 1
+            Ellipse:
+                pos: self.pos
+                size: 15, 15
+    GamePiece:
+        id: green_icon
+        canvas:
+            Color:
+                rgb: 0, 1, 0
+            Ellipse:
+                pos: self.pos
+                size: 15, 15
+    GamePiece:
+        id: blue_icon
+        canvas:
+            Color:
+                rgb: 0, 0, 1
+            Ellipse:
+                pos: self.pos
+                size: 15, 15
     
-<InstrumentPanel>:
+<ControlPanel>:
+    notifications: notification_text
+    notepad: notepad_input
+    suggest: suggest_button
+    accuse: accuse_button
+    end_turn: end_turn_button
+    
     BoxLayout:
         orientation: 'vertical'
         padding: 5
@@ -170,9 +304,9 @@
             text: 'Notifications'
                 
         TextInput:
+            id: notification_text
             size_hint_y: 1.5
             pos_hint: {'x': 1}
-            text: 'Miss Scarlet moved into the Library.'
         
         Label:
             size_hint_y: 0.1
@@ -180,25 +314,32 @@
             text: 'Detective Notebook'
              
         TextInput:
+            id: notepad_input
             size_hint_y: 1.5
             pos_hint: {'x': 1}
-            text: 'Me - Person: Miss Scarlet\nMe - Room: Library\nMe - Weapon: Knife\nPlayer 2 - Room: Kitchen'
 
         BoxLayout:
             orientation: 'horizontal'
             pos_hint: {'x': 1}
             padding: 5
             spacing: 5
-            Button:
-                on_release: root.suggest_popup()
+            DisableButton:
+                id: suggest_button
                 text: 'Suggest'
-            Button:
-                on_release: root.accuse_popup()
+                on_release: root.suggest_popup()
+            DisableButton:
+                id: accuse_button
                 text: 'Accuse'
-            Button:
+                on_release: root.accuse_popup()
+            DisableButton:
+                id: end_turn_button
                 text: 'End Turn'
 
 <AccusationPopup>:
+    suspect: suspect
+    room: room
+    weapon: weapon
+    
     auto_dismiss: False
     title: 'Accusation'
     size_hint: None, None
@@ -212,16 +353,19 @@
             padding: 5
             spacing: 5
             Spinner:
+                id: suspect
                 size_hint_y: None
                 height: 34
                 text: 'Suspect'
                 values: 'Miss Scarlet', 'Colonel Mustard', 'Professor Plum', 'Mr. Green', 'Mrs. White', 'Mrs. Peacock'
             Spinner:
+                id: room
                 size_hint_y: None
                 height: 34
                 text: 'Room'
                 values: 'Study', 'Hall', 'Lounge', 'Library', 'Billiard Room', 'Dining Room', 'Conservatory', 'Ballroom', 'Kitchen'
             Spinner:
+                id: weapon
                 size_hint_y: None
                 height: 34
                 text: 'Weapon'
@@ -242,6 +386,9 @@
                 on_release: root.dismiss()
                     
 <SuggestionPopup>:
+    suspect: suspect
+    weapon: weapon
+    
     auto_dismiss: False
     title: 'Suggestion'
     size_hint: None, None
@@ -255,11 +402,13 @@
             padding: 5
             spacing: 5
             Spinner:
+                id: suspect
                 size_hint_y: None
                 height: 34
                 text: 'Suspect'
                 values: 'Miss Scarlet', 'Colonel Mustard', 'Professor Plum', 'Mr. Green', 'Mrs. White', 'Mrs. Peacock'
             Spinner:
+                id: weapon
                 size_hint_y: None
                 height: 34
                 text: 'Weapon'
