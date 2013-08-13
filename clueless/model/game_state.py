@@ -69,7 +69,7 @@ ROOMS = [
 
 #constants for hallways
 STUDY_LIBRARY = 'study-library hallway'
-STUDY_HALL = 'study-hall ahllway'
+STUDY_HALL = 'study-hall hallway'
 HALL_BILLIARD = 'hall-billiard hallway'
 HALL_LOUNGE = 'hall-lounge hallway'
 LOUNGE_DINING = 'lounge-dining hallway'
@@ -124,7 +124,7 @@ class GameCard(object):
 
 class Player(object):
     """
-    Player is an external user fo the system that will be playing the game
+    Player is an external user of the system that will be playing the game
     """
     def __init__(self, username, suspect=None,
                  game_cards=None, card_items_seen=None):
@@ -259,7 +259,7 @@ class HomeSquare(GameSpace):
 class GameState(object):
     """
     GameState  creates all properties necessary to
-    observe the state fo the Game in play
+    observe the state of the Game in play
     """
     def __init__(self, game_id, players, player_messages=None, turn_list=None,
                  current_player=None, turn_status=None,
@@ -277,7 +277,7 @@ class GameState(object):
         else:
             self.player_messages = list()
 
-        #Players in order fo turn
+        #Players in order of turn
         if turn_list:
             self.turn_list = turn_list
         else:
@@ -289,7 +289,7 @@ class GameState(object):
         else:
             self.current_player = self.turn_list[0]
 
-        #The status fo the current turn which includes:
+        #The status of the current turn which includes:
         #AWAITING_MOVE, AWAITING_SUGGESTION, AWAITING_SUGGESTION_RESPONSE,
         #or AWAITING_ACCUSATION_OR_END_TURN
         if turn_status:
@@ -312,7 +312,7 @@ class GameState(object):
         #whether the game is a live game or has finished
         self.game_active = game_active
 
-        #holds the Player that is thefinal winner of the game
+        #holds the Player that is the final winner of the game
         self.game_winner = game_winner
 
         #The game_board is a collections of HomeSquares, Rooms, and Hallways,
