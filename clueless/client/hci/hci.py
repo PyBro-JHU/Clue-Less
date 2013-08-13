@@ -54,29 +54,27 @@ class StartScreen(Screen):
         self.client = client
         
     def register_player(self):
-        '''self.client.register_player(self.username)
-        self.client.choose_suspect(self.username, self.suspect)'''
+        self.client.register_player(self.username.text)
+        self.client.choose_suspect(self.username.text, self.suspect.text)
         self.manager.get_screen('game').username = self.username.text
         self.manager.current = self.manager.next()
 
 class GameScreen(Screen):
-    
-    state = game_state.GameState(   # remove this when integrated with game_play
+    state = game_state.GameState(
                 game_id="12345",
                 players=[game_state.Player(
                             username="testuser1",
                             suspect=game_state.PLUM,
                             game_cards=[game_state.GameCard(
-                                            item=game_state.WRENCH, 
+                                            item=game_state.WRENCH,
                                             item_type=game_state.WEAPON)]),
                          game_state.Player(
                             username="testuser2",
                             suspect=game_state.PEACOCK,
                             game_cards=[game_state.GameCard(
-                                            item=game_state.REVOLVER, 
+                                            item=game_state.REVOLVER,
                                             item_type=game_state.WEAPON)])
         ])
-
     gameboard = ObjectProperty(0)
     controls = ObjectProperty(0)
     
