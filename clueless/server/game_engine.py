@@ -498,7 +498,7 @@ class GameEngine(object):
         """
         Validates that a GameSpace is available for a suspect to move to
         """
-        if not self.game.game_board["space_name"]:
+        if not self.game.game_board[space_name]:
             raise errors.GameSpaceInvalidException
 
     def _validate_connected_space(self, current_space, connected_space):

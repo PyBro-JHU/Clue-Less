@@ -89,3 +89,20 @@ class GameResource(restful.Resource):
         response = make_response()
         response.status_code = httplib.OK
         return response
+
+class MovePlayerResource(restful.Resource):
+
+    def post(self):
+        """
+        Put method assigns a suspect for the registered user
+        """
+        request_data = request.json
+        engine.handle_move(
+            request_data['username'],
+            request_data['suspect'],
+            request_data['space_name']
+        )
+        response = make_response(
+            json.dumps({"game_state": engine.game.format()}))
+        response.status_code = httplib.OK
+        return response

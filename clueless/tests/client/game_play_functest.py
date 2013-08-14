@@ -48,17 +48,17 @@ class WhenFunctionalTestingGameClient(unittest.TestCase):
             for player in players:
                 self.assertIsInstance(player, game_state.Player)
             self.assertTrue(
-                self.player_one in player.username
-                for player in players)
+                self.player_one in [player.username
+                for player in players])
             self.assertTrue(
-                self.player_two in player.username
-                for player in players)
+                self.player_two in [player.username
+                for player in players])
             self.assertTrue(
-                self.player_one_suspect in player.suspect
-                for player in players)
+                self.player_one_suspect in [player.suspect
+                for player in players])
             self.assertTrue(
-                self.player_two_suspect in player.suspect
-                for player in players)
+                self.player_two_suspect in [player.suspect
+                for player in players])
 
             #start a new game with the client and validate a GameState object
             #is returned
@@ -67,6 +67,10 @@ class WhenFunctionalTestingGameClient(unittest.TestCase):
 
             game = self.client.get_game_state(game.game_id)
             self.assertTrue(game, game_state.GameState)
+            player = game.current_player
+            current_space = game.game_board[player.suspect]
+            move_space = current_space.connected_spaces[0]
+            game = self.client.move_player(player.username, player.suspect, move_space)
 
             self.client.destroy_game(game.game_id)
 
