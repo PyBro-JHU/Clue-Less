@@ -36,7 +36,7 @@ class GameSpaceUnavilableException(GameEngineException):
 
 class GameSpaceNotConnectedException(GameEngineException):
     def __init__(self):
-        msg = "GameSpace specified is adjacent to the player's current space"
+        msg = "Space specified is not adjacent to the player's current space"
         super(GameSpaceNotConnectedException, self).__init__(msg)
 
 

@@ -120,3 +120,30 @@ class GameClient(object):
 
         if response.status_code != httplib.OK:
             raise errors.GameClientException(response.text)
+
+    def move_player(self, username, suspect, space_name):
+        """
+        Register a new player for upcoming game
+        """
+        url = "{base_url}/moveplayer".format(
+            base_url=self.base_url)
+        headers = {'Content-Type': "application/json"}
+        payload = json.dumps(
+            {
+                "username": username,
+                "suspect": suspect,
+                "space_name": space_name
+            }
+        )
+
+        response = requests.post(url=url, data=payload, headers=headers)
+
+        if response.status_code != httplib.OK:
+            raise errors.GameClientException(response.text)
+
+        body = response.json()
+        game_dict = body["game_state"]
+
+        builder = game_state.GameStateBuilder()
+        game = builder.build_gamestate_from_dict(game_dict)
+        return game

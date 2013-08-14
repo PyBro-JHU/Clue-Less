@@ -19,6 +19,8 @@ def start_server():
     api.add_resource(resources.PlayerResource, '/players/<string:username>')
     api.add_resource(resources.GamesResource, '/games')
     api.add_resource(resources.GameResource, '/games/<string:game_id>')
+    api.add_resource(resources.MovePlayerResource, '/moveplayer')
+
 
     app.run(debug=True)
 
