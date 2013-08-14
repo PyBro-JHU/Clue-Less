@@ -86,9 +86,11 @@ class GameClient(object):
             raise errors.GameClientException(response.text)
 
         body = response.json()
-        game_dict = body["game_state"]
 
-        return game_state.GameState(**game_dict)
+        game_dict = body["game_state"]
+        builder = game_state.GameStateBuilder()
+        game = builder.build_gamestate_from_dict(game_dict)
+        return game
 
     def get_game_state(self, game_id):
         """
@@ -104,7 +106,9 @@ class GameClient(object):
         body = response.json()
         game_dict = body["game_state"]
 
-        return game_state.GameState(**game_dict)
+        builder = game_state.GameStateBuilder()
+        game = builder.build_gamestate_from_dict(game_dict)
+        return game
 
     def destroy_game(self, game_id):
         """

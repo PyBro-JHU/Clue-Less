@@ -118,7 +118,7 @@ class GameCard(object):
         """
         return {
             "item": self.item,
-            "type": self.type
+            "item_type": self.type
         }
 
 
