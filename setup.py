@@ -20,6 +20,11 @@ setup(
         "tox"
     ],
     install_requires=[
+        "kivy",
+        "flask",
+        "flask-restful",
+        "pymongo",
+        "requests"
     ],
     test_suite='nose.collector',
     zip_safe=False,

@@ -15,7 +15,7 @@ class DatabaseHandler():
         Sets the address of the mongo server, specifies the database to use
         and connects to the server
         """
-        self.server = 'localhost:27017'
+        self.server = '192.237.162.232:27017'
         self.database_name = 'clueless'
         self.status = STATUS_NEW
 
