@@ -90,11 +90,12 @@ class GameResource(restful.Resource):
         response.status_code = httplib.OK
         return response
 
+
 class MovePlayerResource(restful.Resource):
 
     def post(self):
         """
-        Put method assigns a suspect for the registered user
+        post method moves a player on the game board
         """
         request_data = request.json
         engine.handle_move(
@@ -106,3 +107,74 @@ class MovePlayerResource(restful.Resource):
             json.dumps({"game_state": engine.game.format()}))
         response.status_code = httplib.OK
         return response
+
+
+class SuggestionResource(restful.Resource):
+
+    def post(self):
+        """
+        Post method makes a suggestion
+        """
+        request_data = request.json
+        engine.handle_suggestion(
+            request_data['username'],
+            request_data['suspect'],
+            request_data['weapon'],
+            request_data['room']
+        )
+        response = make_response(
+            json.dumps({"game_state": engine.game.format()}))
+        response.status_code = httplib.OK
+        return response
+
+
+class SuggestionResponseResource(restful.Resource):
+
+    def post(self):
+        """
+        Post method makes a suggestion
+        """
+        request_data = request.json
+        engine.handle_suggestion_response(
+            request_data['username'],
+            request_data['gamecard_item']
+        )
+        response = make_response(
+            json.dumps({"game_state": engine.game.format()}))
+        response.status_code = httplib.OK
+        return response
+
+
+class AccusationResource(restful.Resource):
+
+    def post(self):
+        """
+        Post method makes a suggestion
+        """
+        request_data = request.json
+        engine.handle_accusation(
+            request_data['username'],
+            request_data['suspect'],
+            request_data['weapon'],
+            request_data['room']
+        )
+        response = make_response(
+            json.dumps({"game_state": engine.game.format()}))
+        response.status_code = httplib.OK
+        return response
+
+class EndTurnResource(restful.Resource):
+
+    def post(self):
+        """
+        Post method makes a suggestion
+        """
+        request_data = request.json
+        engine.handle_end_turn(
+            request_data['username']
+        )
+        response = make_response(
+            json.dumps({"game_state": engine.game.format()}))
+        response.status_code = httplib.OK
+        return response
+
