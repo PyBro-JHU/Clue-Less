@@ -147,3 +147,110 @@ class GameClient(object):
         builder = game_state.GameStateBuilder()
         game = builder.build_gamestate_from_dict(game_dict)
         return game
+
+    def make_suggestion(self, username, suspect, weapon, room):
+        """
+        Make a suggestion
+        """
+        url = "{base_url}/suggestion".format(
+            base_url=self.base_url)
+        headers = {'Content-Type': "application/json"}
+        payload = json.dumps(
+            {
+                "username": username,
+                "suspect": suspect,
+                "weapon": weapon,
+                "room": room
+            }
+        )
+
+        response = requests.post(url=url, data=payload, headers=headers)
+
+        if response.status_code != httplib.OK:
+            raise errors.GameClientException(response.text)
+
+        body = response.json()
+        game_dict = body["game_state"]
+
+        builder = game_state.GameStateBuilder()
+        game = builder.build_gamestate_from_dict(game_dict)
+        return game
+
+    def make_suggestion_response(self, username, gamecard_item):
+        """
+        Make a suggestion response
+        """
+        url = "{base_url}/suggestionresponse".format(
+            base_url=self.base_url)
+        headers = {'Content-Type': "application/json"}
+        payload = json.dumps(
+            {
+                "username": username,
+                "gamecard_item": gamecard_item,
+            }
+        )
+
+        response = requests.post(url=url, data=payload, headers=headers)
+
+        if response.status_code != httplib.OK:
+            raise errors.GameClientException(response.text)
+
+        body = response.json()
+        game_dict = body["game_state"]
+
+        builder = game_state.GameStateBuilder()
+        game = builder.build_gamestate_from_dict(game_dict)
+        return game
+
+    def make_accusation(self, username, suspect, weapon, room):
+        """
+        Make a suggestion
+        """
+        url = "{base_url}/accusation".format(
+            base_url=self.base_url)
+        headers = {'Content-Type': "application/json"}
+        payload = json.dumps(
+            {
+                "username": username,
+                "suspect": suspect,
+                "weapon": weapon,
+                "room": room
+            }
+        )
+
+        response = requests.post(url=url, data=payload, headers=headers)
+
+        if response.status_code != httplib.OK:
+            raise errors.GameClientException(response.text)
+
+        body = response.json()
+        game_dict = body["game_state"]
+
+        builder = game_state.GameStateBuilder()
+        game = builder.build_gamestate_from_dict(game_dict)
+        return game
+
+    def end_turn(self, username):
+        """
+        end a players turn
+        """
+        url = "{base_url}/endturn".format(
+            base_url=self.base_url)
+        headers = {'Content-Type': "application/json"}
+        payload = json.dumps(
+            {
+                "username": username
+            }
+        )
+
+        response = requests.post(url=url, data=payload, headers=headers)
+
+        if response.status_code != httplib.OK:
+            raise errors.GameClientException(response.text)
+
+        body = response.json()
+        game_dict = body["game_state"]
+
+        builder = game_state.GameStateBuilder()
+        game = builder.build_gamestate_from_dict(game_dict)
+        return game

@@ -20,7 +20,11 @@ def start_server():
     api.add_resource(resources.GamesResource, '/games')
     api.add_resource(resources.GameResource, '/games/<string:game_id>')
     api.add_resource(resources.MovePlayerResource, '/moveplayer')
-
+    api.add_resource(resources.SuggestionResource, '/suggestion')
+    api.add_resource(
+        resources.SuggestionResponseResource, '/suggestionresponse')
+    api.add_resource(resources.AccusationResource, '/accusation')
+    api.add_resource(resources.EndTurnResource, '/endturn')
 
     app.run(debug=True)
 
