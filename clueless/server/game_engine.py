@@ -1,8 +1,11 @@
 import random
 import uuid
 from clueless import data
+from clueless import log
 from clueless.model import game_state
 from clueless.server import errors
+
+_LOG = log.get_logger(__name__)
 
 
 class CardDeck(object):
@@ -67,7 +70,7 @@ class CardDeck(object):
     def deal_cards(self, num_hands):
         """
         deals the cards by taking the number of hands and return a list
-        of lists that contain each seperate hand
+        of lists that contain each separate hand
         """
         return [self._game_cards[x::num_hands] for x in range(num_hands)]
 
@@ -180,13 +183,13 @@ class GameEngine(object):
         # accusation or end their turn
         if isinstance(new_space, game_state.Room):
             self.game.turn_status = game_state.AWAITING_SUGGESTION
-            message = "Player {0} must nake a suggestion.".format(
+            message = "Player {0} must make a suggestion.".format(
                 player_username)
             self._send_player_message(message)
         else:
             self.game.turn_status = game_state.AWAITING_ACCUSATION_OR_END_TURN
-            message = "Player {0} must nake an accusation " \
-                "or end their turn.".format(
+            message = "Player {0} must make an accusation " \
+            "or end their turn.".format(
                 player_username)
             self._send_player_message(message)
 
@@ -207,8 +210,9 @@ class GameEngine(object):
 
         #When a suggestion is made bot the suspect and weapon must be
         #moved to the Room that the player is currently in
-        self._move_suspect(suspect, room)
-        self._move_weapon(weapon, room)
+        suggestion_room = self.game.game_board[room]
+        self._move_suspect(suspect, suggestion_room)
+        self._move_weapon(weapon, suggestion_room)
 
         #create the suggestion:
         self.game.current_suggestion = game_state.Suggestion(
@@ -228,7 +232,7 @@ class GameEngine(object):
             self.game.suggestion_response_player = response_player
             self.game.turn_status = game_state.AWAITING_SUGGESTION_RESPONSE
             message = "Player {0} must prove the suggestion false.".format(
-                response_player.name)
+                response_player.username)
             self._send_player_message(message)
         else:
             self.game.turn_status = game_state.AWAITING_ACCUSATION_OR_END_TURN
@@ -261,7 +265,7 @@ class GameEngine(object):
         self.game.turn_status = game_state.AWAITING_ACCUSATION_OR_END_TURN
         message = "Player {0} must make an accusation " \
             "or end their turn.".format(
-            self.game.current_player.name)
+            self.game.current_player.username)
         self._send_player_message(message)
 
     def handle_accusation(self, player_username, suspect, weapon, room):
@@ -282,12 +286,12 @@ class GameEngine(object):
         accusation_items = [suspect, weapon, room]
         winning_items = [card.item for card in self.game.case_file]
 
-        #compare tha accusation to the wiining items, if the accusation
+        #compare tha accusation to the winning items, if the accusation
         #is correct then end the game and mark the winner
         if set(accusation_items) == set(winning_items):
             self.game.game_active = False
             self.game.game_winner = self.game.current_player
-            message = "Player {0} has won the game!!!.".format(
+            message = "Player {0} has won the game!!!".format(
                 player_username)
             self._send_player_message(message)
 
@@ -300,7 +304,7 @@ class GameEngine(object):
                 "longer win the game.  All future turns are forfeited, " \
                 "but the player must make still prove suggestions false if " \
                 "asked.".format(player_username)
-        self._send_player_message(message)
+            self._send_player_message(message)
 
     def handle_end_turn(self, player_username):
         """
@@ -349,7 +353,7 @@ class GameEngine(object):
         self.game.turn_status = game_state.AWAITING_MOVE
 
         message = "Player {0} has begun their turn, now awaiting move.".format(
-            self.game.current_player.name)
+            self.game.current_player.username)
         self._send_player_message(message)
 
         #check if the new player has any moves available by
@@ -358,6 +362,7 @@ class GameEngine(object):
             self.game.current_player.suspect)
 
         move_available = False
+
         for space in current_space.connected_spaces:
             if self.game.game_board[space].is_available():
                 move_available = True
@@ -365,11 +370,13 @@ class GameEngine(object):
         #If player has no available spaces to move to, they must make an
         #accusation or end their turn
         if not move_available:
+            _LOG.exception("not available")
             self.turn_status = game_state.AWAITING_ACCUSATION_OR_END_TURN
-        message = "Player {0} has no available spaces to move to. {1}.".format(
-            self.game.current_player.name,
-            game_state.AWAITING_ACCUSATION_OR_END_TURN)
-        self._send_player_message(message)
+            message = "Player {0} has no available spaces to move to. {1}."\
+                .format(
+                self.game.current_player.username,
+                game_state.AWAITING_ACCUSATION_OR_END_TURN)
+            self._send_player_message(message)
 
     def _get_next_player_index(self):
         """
@@ -395,13 +402,17 @@ class GameEngine(object):
         """
         Returns the GameSpace object that the weapon is currently in
         """
+        game_board = self.game.game_board
         rooms = [
-            room for room in self.game.game_board
-            if isinstance(room, game_state.Room)
+            room for room in [game_board[space]
+            for space in game_board
+            if isinstance(game_board[space], game_state.Room)]
         ]
+
         for room in rooms:
-            if weapon in self.game.game_board[room].weapons:
-                return self.game.game_board[room]
+
+            if weapon in room.weapons:
+                return room
 
     def _get_suggestion_response_player(self):
         """
@@ -468,7 +479,7 @@ class GameEngine(object):
         validates that the username is that of the player who is selected
         to prove the current suggestion false
         """
-        if username != self.game.suggestion_response_player:
+        if username != self.game.suggestion_response_player.username:
             raise errors.SuggestionResponsePlayerInvalidException
 
     def _validate_suspect(self, suspect):

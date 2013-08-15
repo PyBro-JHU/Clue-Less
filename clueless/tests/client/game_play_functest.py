@@ -8,10 +8,12 @@ the game server.
 import unittest
 from multiprocessing.process import Process
 from clueless.client.game_play import GameClient
+from clueless import log
 from clueless.model import game_state
 from clueless.server.app import start_server
 import time
 
+_LOG = log.get_logger(__name__)
 
 class WhenFunctionalTestingGameClient(unittest.TestCase):
 
@@ -23,9 +25,9 @@ class WhenFunctionalTestingGameClient(unittest.TestCase):
         #create the game client
         self.client = GameClient(host="127.0.0.1", port="5000")
 
-        self.player_one = "player1"
+        self.player_one = "Arthur"
         self.player_one_suspect = game_state.PEACOCK
-        self.player_two = "player2"
+        self.player_two = "Steven"
         self.player_two_suspect = game_state.PLUM
 
     def test_game_client(self):
@@ -67,10 +69,76 @@ class WhenFunctionalTestingGameClient(unittest.TestCase):
 
             game = self.client.get_game_state(game.game_id)
             self.assertTrue(game, game_state.GameState)
+
+            #move player 1  from start space to hallway
             player = game.current_player
-            current_space = game.game_board[player.suspect]
-            move_space = current_space.connected_spaces[0]
-            game = self.client.move_player(player.username, player.suspect, move_space)
+            player_1_current_space = game.game_board[player.suspect]
+            move_space = player_1_current_space.connected_spaces[0]
+            game = self.client.move_player(
+                player.username, player.suspect, move_space)
+            self.assertEqual(
+                game.turn_status, game_state.AWAITING_ACCUSATION_OR_END_TURN)
+            game = self.client.end_turn(player.username)
+            player_1_current_space = game.game_board[move_space]
+            self.assertEqual(game.turn_status, game_state.AWAITING_MOVE)
+
+            #move player 2  from start space to hallway
+            player = game.current_player
+            player_2_current_space = game.game_board[player.suspect]
+            move_space = player_2_current_space.connected_spaces[0]
+            game = self.client.move_player(
+                player.username, player.suspect, move_space)
+            self.assertEqual(
+                game.turn_status, game_state.AWAITING_ACCUSATION_OR_END_TURN)
+            game = self.client.end_turn(player.username)
+            player_2_current_space = game.game_board[move_space]
+            self.assertEqual(game.turn_status, game_state.AWAITING_MOVE)
+
+            #move player 1  from hallway to room
+            player = game.current_player
+            move_space = player_1_current_space.connected_spaces[0]
+            game = self.client.move_player(
+                player.username, player.suspect, move_space)
+            self.assertEqual(
+                game.turn_status, game_state.AWAITING_SUGGESTION)
+            #make suggestion based on room player is currently in
+            game = self.client.make_suggestion(
+                player.username, game_state.MUSTARD,
+                game_state.REVOLVER,
+                move_space
+            )
+
+            if game.suggestion_response_player:
+                self.assertEqual(
+                    game.turn_status, game_state.AWAITING_SUGGESTION_RESPONSE)
+
+                response_player = game.suggestion_response_player
+                suggestion = game.current_suggestion
+                gamecard_item = list(
+                    {suggestion.weapon, suggestion.room, suggestion.suspect}
+                    &
+                    set(card.item for card in response_player.game_cards))[0]
+                game = self.client.make_suggestion_response(
+                    response_player.username, gamecard_item)
+
+            suspect = [
+                card.item for card in game.case_file
+                if card.type == game_state.SUSPECT
+            ][0]
+            weapon = [
+                card.item for card in game.case_file
+                if card.type == game_state.WEAPON
+            ][0]
+            room = [
+                card.item for card in game.case_file
+                if card.type == game_state.ROOM
+            ][0]
+
+            game = self.client.make_accusation(
+                player.username, suspect, weapon, room)
+
+            for message in  game.player_messages:
+                print message
 
             self.client.destroy_game(game.game_id)
 

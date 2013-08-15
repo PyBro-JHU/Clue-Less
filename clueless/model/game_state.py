@@ -208,7 +208,7 @@ class Room(GameSpace):
         if weapons:
             self.weapons = weapons
         else:
-            self.weapons = None
+            self.weapons = list()
 
     def is_available(self):
         #A Room can hold more than one suspect at a time
@@ -327,7 +327,8 @@ class GameState(object):
                         DINING_KITCHEN,
                         BALLROOM_KITCHEN,
                         STUDY
-                    ]
+                    ],
+                    weapons=[ROPE]
                 ),
                 BALLROOM: Room(
                     name=BALLROOM,
@@ -335,7 +336,8 @@ class GameState(object):
                         BALLROOM_KITCHEN,
                         CONSERVATORY_BALLROOM,
                         BILLIARD_BALLROOM
-                    ]
+                    ],
+                    weapons=[LEAD_PIPE]
                 ),
                 CONSERVATORY: Room(
                     name=CONSERVATORY,
@@ -343,7 +345,8 @@ class GameState(object):
                         CONSERVATORY_BALLROOM,
                         LIBRARY_CONSERVATORY,
                         LOUNGE
-                    ]
+                    ],
+                    weapons=[CANDLESTICK]
                 ),
                 BILLIARD_ROOM: Room(
                     name=BILLIARD_ROOM,
@@ -352,7 +355,8 @@ class GameState(object):
                         LIBRARY_BILLIARD,
                         BILLIARD_BALLROOM,
                         BILLIARD_DINING
-                    ]
+                    ],
+                    weapons=[KNIFE]
                 ),
                 LIBRARY: Room(
                     name=LIBRARY,
@@ -360,7 +364,8 @@ class GameState(object):
                         STUDY_LIBRARY,
                         LIBRARY_CONSERVATORY,
                         LIBRARY_BILLIARD
-                    ]
+                    ],
+                    weapons=[WRENCH]
                 ),
                 STUDY: Room(
                     name=STUDY,
@@ -368,7 +373,8 @@ class GameState(object):
                         KITCHEN,
                         STUDY_LIBRARY,
                         STUDY_HALL
-                    ]
+                    ],
+                    weapons=[REVOLVER]
                 ),
                 HALL: Room(
                     name=HALL,
