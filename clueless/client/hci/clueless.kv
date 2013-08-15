@@ -39,24 +39,6 @@
                 height: 34
                 text: 'Miss Scarlet'
                 values: 'Miss Scarlet', 'Colonel Mustard', 'Professor Plum', 'Mr. Green', 'Mrs. White', 'Mrs. Peacock'
-            #Label:
-            #    text: 'Enter Game Name:'
-            #TextInput:
-            #    id: game_name
-            #    multiline: False
-            #    size_hint: 1, 1
-            #    text: 'Game1'
-            #Label:
-            #    text: 'Or join an Existing Game'
-            #Label:
-            #    text: ''
-            #Label:
-            #    text: 'Select Game:'
-            #Spinner:
-            #    size_hint_y: None
-            #    height: 34
-            #    text: ''
-            #    values: 'Game Name 1', 'Game Name 2'
             Label:
                 text: ''                
             Label:
@@ -65,7 +47,6 @@
                 size_hint_y: None
                 height: 34
                 text: 'Play!'
-                #on_release: root.manager.current = root.manager.next()
                 on_release: root.register_player()
 
 <GameScreen>:
@@ -107,7 +88,7 @@
                 size_hint_x: None
                 width: 60
                 text: 'Quit'
-                on_release: root.manager.current = root.manager.previous()
+                on_release: root.quit_game()
 
         BoxLayout:
             orientation: 'horizontal'
@@ -117,21 +98,11 @@
             ControlPanel:
                 id: controls
 
-<GamePiece>:
-    size: 15, 15
-            
 <GameTile>
     background_down: 'resources/pyBro_logo.png'
     center: self.center
 
 <Gameboard>:
-    scarlet: red_icon
-    mustard: yellow_icon
-    plum: purple_icon
-    green: green_icon
-    white: white_icon
-    peacock: blue_icon
-    
     study: study_0
     study_hall: hallway_1
     hall: hall_2
@@ -163,7 +134,6 @@
         GameTile:
             id: study_0
             background_normal: 'resources/study.png'
-            on_release: root.debug()
         GameTile:
             id: hallway_1
             background_normal: 'resources/hallway_horizontal.png'
@@ -236,55 +206,6 @@
         GameTile:
             id: kitchen_24
             background_normal: 'resources/kitchen.png'
-            
-    GamePiece:
-        id: white_icon
-        canvas:
-            Color:
-                rgb: 1, 1, 1
-            Ellipse:
-                pos: self.pos
-                size: 15, 15
-    GamePiece:
-        id: red_icon
-        canvas:
-            Color:
-                rgb: 1, 0, 0
-            Ellipse:
-                pos: self.pos
-                size: 15, 15
-    GamePiece:
-        id: yellow_icon
-        canvas:
-            Color:
-                rgb: 1, 1, 0
-            Ellipse:
-                pos: self.pos
-                size: 15, 15
-    GamePiece:
-        id: purple_icon
-        canvas:
-            Color:
-                rgb: 1, 0, 1
-            Ellipse:
-                pos: self.pos
-                size: 15, 15
-    GamePiece:
-        id: green_icon
-        canvas:
-            Color:
-                rgb: 0, 1, 0
-            Ellipse:
-                pos: self.pos
-                size: 15, 15
-    GamePiece:
-        id: blue_icon
-        canvas:
-            Color:
-                rgb: 0, 0, 1
-            Ellipse:
-                pos: self.pos
-                size: 15, 15
     
 <ControlPanel>:
     notifications: notification_text
