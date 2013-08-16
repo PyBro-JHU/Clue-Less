@@ -7,6 +7,7 @@ the game server.
 
 import unittest
 from multiprocessing.process import Process
+from clueless.client import errors
 from clueless.client.game_play import GameClient
 from clueless import log
 from clueless.model import game_state
@@ -14,6 +15,7 @@ from clueless.server.app import start_server
 import time
 
 _LOG = log.get_logger(__name__)
+
 
 class WhenFunctionalTestingGameClient(unittest.TestCase):
 
@@ -109,6 +111,9 @@ class WhenFunctionalTestingGameClient(unittest.TestCase):
             )
 
             if game.suggestion_response_player:
+                with self.assertRaises(errors.GameClientException):
+                    game = self.client.move_player(
+                        player.username, player.suspect, move_space)
                 self.assertEqual(
                     game.turn_status, game_state.AWAITING_SUGGESTION_RESPONSE)
 
