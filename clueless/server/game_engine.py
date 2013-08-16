@@ -101,12 +101,19 @@ class GameEngine(object):
         Starts a new game with all the registered players
         """
         self.game_id = str(uuid.uuid4())
+
         game_players = [self.players[key] for key in self.players]
         self.game = game_state.GameState(self.game_id, game_players)
         card_deck = CardDeck()
 
+        message = "Game started!"
+        self._send_player_message(message)
+
         #poplate the case file with the winning cards
         self.game.case_file = card_deck.draw_winning_cards()
+
+        message = "Dealing game cards to players.."
+        self._send_player_message(message)
 
         #deal cards to the players
         card_deck.shuffle_cards()
@@ -114,6 +121,10 @@ class GameEngine(object):
         hands = card_deck.deal_cards(num_players)
         for x in range(num_players):
             self.game.players[x].game_cards = hands[x]
+
+        message = "Player {0} has begun their turn, now awaiting move.".format(
+            self.game.current_player.username)
+        self._send_player_message(message)
 
         self.db_handler.insert_document(
             object_name='game', document=self.game.format())
