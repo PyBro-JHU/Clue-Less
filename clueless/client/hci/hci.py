@@ -81,35 +81,7 @@ class GameScreen(Screen):
             self.controls.update(self.client, 
                                  self.state.game_id,
                                  self.username)
-            if self.state.suggestion_response_player != None and \
-               self.state.suggestion_response_player.username == self.username:
-                self.disprove_suggestion_popup()
                 
-    def disprove_suggestion_popup(self):
-        btnclose = Button(text='Submit', size_hint_y=None, height='50sp')
-        content = BoxLayout(orientation='vertical', padding=10, spacing=10)
-        content.add_widget(Label(text='Select card to disprove the Suggestion'))
-        cards = ()
-        for card in self.client.get_player(self.username).game_cards:
-            if card['item'] == self.state.current_suggestion.suspect or \
-               card['item'] == self.state.current_suggestion.weapon or \
-               card['item'] == self.state.current_suggestion.room:
-                cards += card['item']
-        self.spinner = Spinner(text='Card',
-                          values=(cards),
-                          size_hint=(None, None), size=(100, 44),
-                          pos_hint={'center_x': .5, 'center_y': .5})
-        content.add_widget(self.spinner)
-        content.add_widget(btnclose)
-        self.popup = Popup(content=content, title='Prove Suggestion False',
-                      size_hint=(None, None), size=('300dp', '300dp'))
-        btnclose.bind(on_release=self.disprove_suggestion())
-        self.popup.open()
-        
-    def disprove_suggestion(self):
-        self.client.make_suggestion_response(self.username, self.spinner.text)
-        self.popup.dismiss()
-        
     def quit_game(self):
         self.state=None
         self.client.destroy_game(self.game_id)
@@ -288,16 +260,21 @@ class Gameboard(FloatLayout):
             else:
                 num_suspects = 0
                 for suspect in room.suspects:
-                    y = tile.top-(num_suspects/2+1)*(tile.height/4)
-                    if num_suspects%2 == 0:
-                        x = tile.right-2*(tile.width/3)
+                    if ('hallway' in name):
+                        y = tile.top-(tile.height/2)
+                        x = tile.right-(tile.width/2)
                     else:
-                        x = tile.right-tile.width/3
+                        y = tile.top-(num_suspects/2+1)*(tile.height/4)
+                        if num_suspects%2 == 0:
+                            x = tile.right-2*(tile.width/3)
+                        else:
+                            x = tile.right-tile.width/3
                     with tile.canvas.after:
                         Color(*self.COLORS[suspect])
                         Ellipse(pos=(x-7.5, y-7.5), size=(15,15))
                     num_suspects += 1
                     
+        # enable the game tiles if it's the user's turn, otherwise disable them
         if self.username == self.state.current_player.username:
             self.enable_tiles()
         else:
@@ -322,6 +299,7 @@ class ControlPanel(FloatLayout):
     
     def __init__(self, **kwargs):
         super(ControlPanel, self).__init__(**kwargs)
+        self.disproving = False
 
     def update(self, client, game_id, username):
         self.client = client
@@ -342,6 +320,11 @@ class ControlPanel(FloatLayout):
         for card in client.get_player(self.username).card_items_seen:
             notes += card['item'] + " : " + card['item_type'] + '\n'
         self.notepad.text = notes
+        if self.state.suggestion_response_player != None and \
+           self.state.suggestion_response_player.username == self.username and \
+           not self.disproving:
+            self.disproving = True
+            self.disprove_suggestion_popup()
                 
     def disable_buttons(self):
         self.suggest_button.disabled=True; self.suggest_button.canvas.opacity=.5
@@ -352,6 +335,34 @@ class ControlPanel(FloatLayout):
         self.suggest_button.disabled=False; self.suggest_button.canvas.opacity=1
         self.accuse_button.disabled=False; self.accuse_button.canvas.opacity=1
         self.end_turn_button.disabled=False; self.end_turn_button.canvas.opacity=1
+        
+    def disprove_suggestion(self):
+        self.client.make_suggestion_response(self.username, self.spinner.text)
+        self.popup.dismiss
+        self.disproving = False
+        
+    def disprove_suggestion_popup(self):
+        submit_button = Button(text='Submit', size_hint_y=None, height='50sp')
+        content = BoxLayout(orientation='vertical', padding=10, spacing=10)
+        content.add_widget(Label(text='Select card to disprove the Suggestion'))
+        cards = ()
+        #import pdb; pdb.set_trace()
+        for card in self.client.get_player(self.username).game_cards:
+            if card['item'] == self.state.current_suggestion.suspect or \
+               card['item'] == self.state.current_suggestion.weapon or \
+               card['item'] == self.state.current_suggestion.room:
+                cards = cards + (card['item'],)
+        self.spinner = Spinner(text='Card',
+                          values=(cards),
+                          size_hint=(None, None), size=(100, 44),
+                          pos_hint={'center_x': .5, 'center_y': .5})
+        content.add_widget(self.spinner)
+        content.add_widget(submit_button)
+        self.popup = Popup(content=content, title='Prove Suggestion False',
+                      size_hint=(None, None), size=('300dp', '300dp'))
+        #submit_button.bind(on_release=self.disprove_suggestion())
+        submit_button.bind(on_release=self.popup.dismiss)
+        self.popup.open()
         
     def suggest_popup(self):
         p = SuggestionPopup(client=self.client, state=self.state)
