@@ -81,6 +81,34 @@ class GameScreen(Screen):
             self.controls.update(self.client, 
                                  self.state.game_id,
                                  self.username)
+            if self.state.suggestion_response_player != None and \
+               self.state.suggestion_response_player.username == self.username:
+                self.disprove_suggestion_popup()
+                
+    def disprove_suggestion_popup(self):
+        btnclose = Button(text='Submit', size_hint_y=None, height='50sp')
+        content = BoxLayout(orientation='vertical', padding=10, spacing=10)
+        content.add_widget(Label(text='Select card to disprove the Suggestion'))
+        cards = ()
+        for card in self.client.get_player(self.username).game_cards:
+            if card['item'] == self.state.current_suggestion.suspect or \
+               card['item'] == self.state.current_suggestion.weapon or \
+               card['item'] == self.state.current_suggestion.room:
+                cards += card['item']
+        self.spinner = Spinner(text='Card',
+                          values=(cards),
+                          size_hint=(None, None), size=(100, 44),
+                          pos_hint={'center_x': .5, 'center_y': .5})
+        content.add_widget(self.spinner)
+        content.add_widget(btnclose)
+        self.popup = Popup(content=content, title='Prove Suggestion False',
+                      size_hint=(None, None), size=('300dp', '300dp'))
+        btnclose.bind(on_release=self.disprove_suggestion())
+        self.popup.open()
+        
+    def disprove_suggestion(self):
+        self.client.make_suggestion_response(self.username, self.spinner.text)
+        self.popup.dismiss()
         
     def quit_game(self):
         self.state=None
@@ -300,30 +328,30 @@ class ControlPanel(FloatLayout):
         p.open()
         
     def accuse_popup(self):
-        p = AccusationPopup()
+        p = AccusationPopup(client=self.client, state=self.state)
         p.open()
         
     def end_turn(self):
         self.client.end_turn(self.username)
 
-    def disprove_suggestion_popup(self):
-        btnclose = Button(text='Submit', size_hint_y=None, height='50sp')
-        content = BoxLayout(orientation='vertical', padding=10, spacing=10)
-        content.add_widget(Label(text='Miss Scarlet suggested Colonel \nMustard in Library with Revolver.'))
-        content.add_widget(Label(text='Select card to prove false'))
-        spinner = Spinner(text='Card',
-                          values=('Knife', 'Library'),
-                          size_hint=(None, None), size=(100, 44),
-                          pos_hint={'center_x': .5, 'center_y': .5})
-        content.add_widget(spinner)
-        content.add_widget(btnclose)
-        popup = Popup(content=content, title='Prove Suggestion False',
-                      size_hint=(None, None), size=('300dp', '300dp'))
-        btnclose.bind(on_release=popup.dismiss)
-        popup.open()
-
 class AccusationPopup(Popup):
+    suspect = ObjectProperty(None)
+    weapon = ObjectProperty(None)
+    room = ObjectProperty(None)
+
+    def __init__(self, client, state, **kwargs):
+        super(AccusationPopup, self).__init__(**kwargs)
+        self.client = client
+        self.state = state
     
+    def make_accusation(self):
+        self.client.make_accusation(self.state.current_player.username,
+                                    self.suspect.text,
+                                    self.weapon.text,
+                                    self.room.text)
+        self.popup.dismiss()
+        self.dismiss()
+
     def confirm_popup(self):
         content = BoxLayout(orientation='vertical', padding=10, spacing=10)
         content.add_widget(Label(text='Are you sure you want to make an Accusation?'))
@@ -331,11 +359,11 @@ class AccusationPopup(Popup):
         cancelButton = Button(text='Cancel', size_hint_y=None, height='50sp')
         content.add_widget(accuseButton)
         content.add_widget(cancelButton)
-        popup = Popup(content=content, title='Make Accusation?', auto_dismiss=False,
+        self.popup = Popup(content=content, title='Make Accusation?', auto_dismiss=False,
                       size_hint=(None, None), size=('500dp', '300dp'))
-        cancelButton.bind(on_release=popup.dismiss)
-        accuseButton.bind(on_release=popup.dismiss)
-        popup.open()
+        cancelButton.bind(on_release=self.popup.dismiss)
+        accuseButton.bind(on_release=self.make_accusation())
+        self.popup.open()
         '''content.add_widget(Label(text='You Win!'))
         content.add_widget(Label(text='Please continue playing.'))
         popup = Popup(content=content, title='Accusation Correct',
@@ -355,11 +383,11 @@ class SuggestionPopup(Popup):
         for room in self.state.game_board.values():
             if self.state.current_player.suspect in room.suspects:
                 break
-        import pdb; pdb.set_trace()
         self.client.make_suggestion(username,
                                     self.suspect.text,
                                     self.weapon.text,
                                     room.name)
+        self.dismiss()
 
 class ErrorPopup(Popup):
     message = ObjectProperty(None)

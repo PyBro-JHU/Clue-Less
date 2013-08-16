@@ -293,9 +293,9 @@
                 on_release: root.end_turn()
 
 <AccusationPopup>:
-    suspect: suspect
-    room: room
-    weapon: weapon
+    suspect: _suspect
+    room: _room
+    weapon: _weapon
     
     auto_dismiss: False
     title: 'Accusation'
@@ -310,19 +310,19 @@
             padding: 5
             spacing: 5
             Spinner:
-                id: suspect
+                id: _suspect
                 size_hint_y: None
                 height: 34
                 text: 'Suspect'
                 values: 'Miss Scarlet', 'Colonel Mustard', 'Professor Plum', 'Mr Green', 'Mrs White', 'Mrs Peacock'
             Spinner:
-                id: room
+                id: _room
                 size_hint_y: None
                 height: 34
                 text: 'Room'
                 values: 'Study', 'Hall', 'Lounge', 'Library', 'Billiard Room', 'Dining Room', 'Conservatory', 'Ballroom', 'Kitchen'
             Spinner:
-                id: weapon
+                id: _weapon
                 size_hint_y: None
                 height: 34
                 text: 'Weapon'
