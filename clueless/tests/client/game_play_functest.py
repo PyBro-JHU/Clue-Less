@@ -93,6 +93,7 @@ class WhenFunctionalTestingGameClient(unittest.TestCase):
             self.assertEqual(
                 game.turn_status, game_state.AWAITING_ACCUSATION_OR_END_TURN)
             game = self.client.end_turn(player.username)
+
             player_2_current_space = game.game_board[move_space]
             self.assertEqual(game.turn_status, game_state.AWAITING_MOVE)
 
@@ -103,6 +104,7 @@ class WhenFunctionalTestingGameClient(unittest.TestCase):
                 player.username, player.suspect, move_space)
             self.assertEqual(
                 game.turn_status, game_state.AWAITING_SUGGESTION)
+
             #make suggestion based on room player is currently in
             game = self.client.make_suggestion(
                 player.username, game_state.MUSTARD,
@@ -110,6 +112,8 @@ class WhenFunctionalTestingGameClient(unittest.TestCase):
                 move_space
             )
 
+            #if there is a player that can prove the suggestion false
+            #then test the suggestion response
             if game.suggestion_response_player:
                 with self.assertRaises(errors.GameClientException):
                     game = self.client.move_player(
@@ -126,6 +130,17 @@ class WhenFunctionalTestingGameClient(unittest.TestCase):
                 game = self.client.make_suggestion_response(
                     response_player.username, gamecard_item)
 
+            self.assertEqual(
+                game.turn_status, game_state.AWAITING_ACCUSATION_OR_END_TURN)
+            game = self.client.end_turn(player.username)
+
+            self.assertEqual(game.turn_status, game_state.AWAITING_MOVE)
+
+            last_player = player
+            player = game.current_player
+            self.assertNotEqual(player.username, last_player.username)
+
+            #test accusation
             suspect = [
                 card.item for card in game.case_file
                 if card.type == game_state.SUSPECT
