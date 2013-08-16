@@ -1,6 +1,7 @@
 #:kivy 1.0
 #:import kivy kivy
 #:import WipeTransition kivy.uix.screenmanager.WipeTransition
+#:import game_state clueless.model
                 
 <StartScreen>:
     username: user_name
@@ -38,7 +39,7 @@
                 size_hint_y: None
                 height: 34
                 text: 'Miss Scarlet'
-                values: 'Miss Scarlet', 'Colonel Mustard', 'Professor Plum', 'Mr. Green', 'Mrs. White', 'Mrs. Peacock'
+                values: 'Miss Scarlet', 'Colonel Mustard', 'Professor Plum', 'Mr Green', 'Mrs White', 'Mrs Peacock'
             Label:
                 text: ''                
             Label:
@@ -133,86 +134,120 @@
         cols: 5
         GameTile:
             id: study_0
+            text: 'Study'
             background_normal: 'resources/study.png'
+            on_release: root.make_move('Study')
         GameTile:
             id: hallway_1
             background_normal: 'resources/hallway_horizontal.png'
+            on_release: root.make_move('study-hall hallway')
         GameTile:
             id: hall_2
+            text: 'Hall'
             background_normal: 'resources/hall.png'
+            on_release: root.make_move('Hall')
         GameTile:
             id: hallway_3
             background_normal: 'resources/hallway_horizontal.png'
+            on_release: root.make_move('hall-lounge hallway')
         GameTile:
             id: lounge_4
+            text: 'Lounge'
             background_normal: 'resources/lounge.png'
+            on_release: root.make_move('Lounge')
         GameTile:
             id: hallway_5
             background_normal: 'resources/hallway_vertical.png'
+            on_release: root.make_move('study-library hallway')
         GameTile:
             id: secret_passage_6
             background_normal: 'resources/pyBro_logo-gray.jpg'
+            disabled: True
         GameTile:
             id: hallway_7
             background_normal: 'resources/hallway_vertical.png'
+            on_release: root.make_move('hall-billiard hallway')
         GameTile:
             id: secret_passage_8
             background_normal: 'resources/pyBro_logo-gray.jpg'
+            disabled: True
         GameTile:
             id: hallway_9
             background_normal: 'resources/hallway_vertical.png'
+            on_release: root.make_move('lounge-dining hallway')
         GameTile:
             id: library_10
+            text: 'Library'
             background_normal: 'resources/library.png'
+            on_release: root.make_move('Library')
         GameTile:
             id: hallway_11
             background_normal: 'resources/hallway_horizontal.png'
+            on_release: root.make_move('library-billiard hallway')
         GameTile:
             id: billiard_room_12
+            text: 'Billiard Room'
             background_normal: 'resources/billiards_room.png'
+            on_release: root.make_move('Billiard Room')
         GameTile:
             id: hallway_13
             background_normal: 'resources/hallway_horizontal.png'
+            on_release: root.make_move('billiard-dining hallway')
         GameTile:
             id: dining_room_14
+            text: 'Dining Room'
             background_normal: 'resources/dining_room.png'
+            on_release: root.make_move('Dining Room')
         GameTile:
             id: hallway_15
             background_normal: 'resources/hallway_vertical.png'
+            on_release: root.make_move('library-conservatory hallway')
         GameTile:
             id: secret_passage_16
             background_normal: 'resources/pyBro_logo-gray.jpg'
+            disabled: True
         GameTile:
             id: hallway_17
             background_normal: 'resources/hallway_vertical.png'
+            on_release: root.make_move('billiard-ballroom hallway')
         GameTile:
             id: secret_passage_18
             background_normal: 'resources/pyBro_logo-gray.jpg'
+            disabled: True
         GameTile:
             id: hallway_19
             background_normal: 'resources/hallway_vertical.png'
+            on_release: root.make_move('dining-kitchen hallway')
         GameTile:
             id: conservatory_20
+            text: 'Conservatory'
             background_normal: 'resources/conservatory.png'
+            on_release: root.make_move('Conservatory')
         GameTile:
             id: hallway_21
             background_normal: 'resources/hallway_horizontal.png'
+            on_release: root.make_move('conservatory-ballroom hallway')
         GameTile:
             id: ballroom_22
+            text: 'Ballroom'
             background_normal: 'resources/ballroom.png'
+            on_release: root.make_move('Ballroom')
         GameTile:
             id: hallway_23
             background_normal: 'resources/hallway_horizontal.png'
+            on_release: root.make_move('ballroom-kitchen hallway')
         GameTile:
             id: kitchen_24
+            text: 'Kitchen'
             background_normal: 'resources/kitchen.png'
+            on_release: root.make_move('Kitchen')
     
 <ControlPanel>:
     notifications: notification_text
     notepad: notepad_input
-    suggest: suggest_button
-    accuse: accuse_button
-    end_turn: end_turn_button
+    suggest_button: _suggest_button
+    accuse_button: _accuse_button
+    end_turn_button: _end_turn_button
     
     BoxLayout:
         orientation: 'vertical'
@@ -245,16 +280,17 @@
             padding: 5
             spacing: 5
             DisableButton:
-                id: suggest_button
+                id: _suggest_button
                 text: 'Suggest'
                 on_release: root.suggest_popup()
             DisableButton:
-                id: accuse_button
+                id: _accuse_button
                 text: 'Accuse'
                 on_release: root.accuse_popup()
             DisableButton:
-                id: end_turn_button
+                id: _end_turn_button
                 text: 'End Turn'
+                on_release: root.end_turn()
 
 <AccusationPopup>:
     suspect: suspect
@@ -278,7 +314,7 @@
                 size_hint_y: None
                 height: 34
                 text: 'Suspect'
-                values: 'Miss Scarlet', 'Colonel Mustard', 'Professor Plum', 'Mr. Green', 'Mrs. White', 'Mrs. Peacock'
+                values: 'Miss Scarlet', 'Colonel Mustard', 'Professor Plum', 'Mr Green', 'Mrs White', 'Mrs Peacock'
             Spinner:
                 id: room
                 size_hint_y: None
@@ -307,8 +343,8 @@
                 on_release: root.dismiss()
                     
 <SuggestionPopup>:
-    suspect: suspect
-    weapon: weapon
+    suspect: _suspect
+    weapon: _weapon
     
     auto_dismiss: False
     title: 'Suggestion'
@@ -323,13 +359,13 @@
             padding: 5
             spacing: 5
             Spinner:
-                id: suspect
+                id: _suspect
                 size_hint_y: None
                 height: 34
                 text: 'Suspect'
-                values: 'Miss Scarlet', 'Colonel Mustard', 'Professor Plum', 'Mr. Green', 'Mrs. White', 'Mrs. Peacock'
+                values: 'Miss Scarlet', 'Colonel Mustard', 'Professor Plum', 'Mr Green', 'Mrs White', 'Mrs Peacock'
             Spinner:
-                id: weapon
+                id: _weapon
                 size_hint_y: None
                 height: 34
                 text: 'Weapon'
@@ -342,10 +378,26 @@
                 text: 'Make Suggestion'
                 size_hint_y: None
                 height: '50sp'
-                on_release: root.dismiss()
+                on_release: root.make_suggestion()
             Button:
                 text: 'Cancel'
                 size_hint_y: None
                 height: '50sp'
                 on_release: root.dismiss()
+                
+<ErrorPopup>:
+    message: _message
+    auto_dismiss: True
+    size_hint: None, None
+    size: '500dp', '300dp'
+    title: 'Clue-Less Error'
+    BoxLayout:
+        orientation: 'vertical'
+        Label:
+            id: _message
+        Button:
+            text: 'OK'
+            size_hint_y: None
+            height: '50sp'
+            on_press: root.dismiss()
                     
