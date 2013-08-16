@@ -154,34 +154,49 @@ class Gameboard(FloatLayout):
         
     def disable_tiles(self):
         self.study.disabled=True; self.study.canvas.opacity=.5
-        self.study_hall.disabled=True
-        self.hall.disabled=True; self.hall_lounge.disabled=True
-        self.lounge.disabled=True; self.study_library.disabled=True
-        self.hall_billiard.disabled=True
-        self.lounge_dining.disabled=True
-        self.library.disabled=True; self.library_billiard.disabled=True
-        self.billiard_room.disabled=True; self.billiard_dining.disabled=True
-        self.dining_room.disabled=True; self.library_conservatory.disabled=True
-        self.billiard_ballroom.disabled=True
-        self.dining_kitchen.disabled=True
-        self.conservatory.disabled=True; self.conservatory_ballroom.disabled=True
-        self.ballroom.disabled=True; self.ballroom_kitchen.disabled=True
-        self.kitchen.disabled=True;
+        self.study_hall.disabled=True; self.study_hall.canvas.opacity=.5
+        self.hall.disabled=True; self.hall.canvas.opacity=.5
+        self.hall_lounge.disabled=True; self.hall_lounge.canvas.opacity=.5
+        self.lounge.disabled=True; self.lounge.canvas.opacity=.5
+        self.study_library.disabled=True; self.study_library.canvas.opacity=.5
+        self.hall_billiard.disabled=True; self.hall_billiard.canvas.opacity=.5
+        self.lounge_dining.disabled=True; self.lounge_dining.canvas.opacity=.5
+        self.library.disabled=True; self.library.canvas.opacity=.5
+        self.library_billiard.disabled=True; self.library_billiard.canvas.opacity=.5
+        self.billiard_room.disabled=True; self.billiard_room.canvas.opacity=.5
+        self.billiard_dining.disabled=True; self.billiard_dining.canvas.opacity=.5
+        self.dining_room.disabled=True; self.dining_room.canvas.opacity=.5
+        self.library_conservatory.disabled=True; self.library_conservatory.canvas.opacity=.5
+        self.billiard_ballroom.disabled=True; self.billiard_ballroom.canvas.opacity=.5
+        self.dining_kitchen.disabled=True; self.dining_kitchen.canvas.opacity=.5
+        self.conservatory.disabled=True; self.conservatory.canvas.opacity=.5
+        self.conservatory_ballroom.disabled=True; self.conservatory_ballroom.canvas.opacity=.5
+        self.ballroom.disabled=True; self.ballroom.canvas.opacity=.5
+        self.ballroom_kitchen.disabled=True; self.ballroom_kitchen.canvas.opacity=.5
+        self.kitchen.disabled=True; self.kitchen.canvas.opacity=.5
 
     def enable_tiles(self):
-        self.study.disabled=False; self.study_hall.disabled=False
-        self.hall.disabled=False; self.hall_lounge.disabled=False
-        self.lounge.disabled=False; self.study_library.disabled=False
-        self.hall_billiard.disabled=False
-        self.lounge_dining.disabled=False
-        self.library.disabled=False; self.library_billiard.disabled=False
-        self.billiard_room.disabled=False; self.billiard_dining.disabled=False
-        self.dining_room.disabled=False; self.library_conservatory.disabled=False
-        self.billiard_ballroom.disabled=False
-        self.dining_kitchen.disabled=False
-        self.conservatory.disabled=False; self.conservatory_ballroom.disabled=False
-        self.ballroom.disabled=False; self.ballroom_kitchen.disabled=False
-        self.kitchen.disabled=False
+        self.study.disabled=False; self.study.canvas.opacity=1
+        self.study_hall.disabled=False; self.study_hall.canvas.opacity=1
+        self.hall.disabled=False; self.hall.canvas.opacity=1
+        self.hall_lounge.disabled=False; self.hall_lounge.canvas.opacity=1
+        self.lounge.disabled=False; self.lounge.canvas.opacity=1
+        self.study_library.disabled=False; self.study_library.canvas.opacity=1
+        self.hall_billiard.disabled=False; self.hall_billiard.canvas.opacity=1
+        self.lounge_dining.disabled=False; self.lounge_dining.canvas.opacity=1
+        self.library.disabled=False; self.library.canvas.opacity=1
+        self.library_billiard.disabled=False; self.library_billiard.canvas.opacity=1
+        self.billiard_room.disabled=False; self.billiard_room.canvas.opacity=1
+        self.billiard_dining.disabled=False; self.billiard_dining.canvas.opacity=1
+        self.dining_room.disabled=False; self.dining_room.canvas.opacity=1
+        self.library_conservatory.disabled=False; self.library_conservatory.canvas.opacity=1
+        self.billiard_ballroom.disabled=False; self.billiard_ballroom.canvas.opacity=1
+        self.dining_kitchen.disabled=False; self.dining_kitchen.canvas.opacity=1
+        self.conservatory.disabled=False; self.conservatory.canvas.opacity=1
+        self.conservatory_ballroom.disabled=False; self.conservatory_ballroom.canvas.opacity=1
+        self.ballroom.disabled=False; self.ballroom.canvas.opacity=1
+        self.ballroom_kitchen.disabled=False; self.ballroom_kitchen.canvas.opacity=1
+        self.kitchen.disabled=False; self.kitchen.canvas.opacity=1
 
     def update(self, client, game_id, username):
         TILES = {game_state.STUDY: self.study,
@@ -204,75 +219,89 @@ class Gameboard(FloatLayout):
                  game_state.CONSERVATORY_BALLROOM: self.conservatory_ballroom,
                  game_state.BALLROOM: self.ballroom,
                  game_state.BALLROOM_KITCHEN: self.ballroom_kitchen,
-                 game_state.KITCHEN: self.kitchen}
+                 game_state.KITCHEN: self.kitchen,
+                 game_state.SCARLET: self.hall_lounge,
+                 game_state.PEACOCK: self.library_conservatory,
+                 game_state.PLUM: self.study_library,
+                 game_state.GREEN: self.conservatory_ballroom,
+                 game_state.WHITE: self.ballroom_kitchen,
+                 game_state.MUSTARD: self.lounge_dining}
 
         self.client = client
         self.username = username
         self.state = self.client.get_game_state(game_id)
         self.suspect = self.client.get_player(self.username).suspect
-        if username == self.state.current_player.username:
-            self.enable_tiles()
-        else:
-            self.disable_tiles()
+        
+        self.hall_lounge.canvas.after.clear()
+        self.library_conservatory.canvas.after.clear()
+        self.study_library.canvas.after.clear()
+        self.conservatory_ballroom.canvas.after.clear()
+        self.ballroom_kitchen.canvas.after.clear()
+        self.lounge_dining.canvas.after.clear()
+        
         for name, room in self.state.game_board.iteritems():
+            tile = TILES[room.name]
+            if tile != self.hall_lounge and \
+               tile != self.library_conservatory and \
+               tile != self.study_library and \
+               tile != self.conservatory_ballroom and \
+               tile != self.ballroom_kitchen and \
+               tile != self.lounge_dining:
+                tile.canvas.after.clear()
             if name in game_state.SUSPECTS:
                 if game_state.SCARLET in room.suspects:
                     y = self.hall_lounge.top-self.hall_lounge.height/4
                     x = self.hall_lounge.right-self.hall_lounge.width/2
-                    self.hall_lounge.canvas.after.clear()
                     with self.hall_lounge.canvas.after:
                         Color(*self.COLORS[game_state.SCARLET])
                         Ellipse(pos=(x-7.5, y-7.5), size=(15,15))
                 if game_state.PEACOCK in room.suspects:
                     y = self.library_conservatory.top-self.library_conservatory.height/2
                     x = self.library_conservatory.right-3*(self.library_conservatory.width/4)
-                    self.library_conservatory.canvas.after.clear()
                     with self.library_conservatory.canvas.after:
                         Color(*self.COLORS[game_state.PEACOCK])
                         Ellipse(pos=(x-7.5, y-7.5), size=(15,15))
                 if game_state.PLUM in room.suspects:
                     y = self.study_library.top-self.study_library.height/2
                     x = self.study_library.right-3*(self.study_library.width/4)
-                    self.study_library.canvas.after.clear()
                     with self.study_library.canvas.after:
                         Color(*self.COLORS[game_state.PLUM])
                         Ellipse(pos=(x-7.5, y-7.5), size=(15,15))
                 if game_state.GREEN in room.suspects:
                     y = self.conservatory_ballroom.top-3*(self.conservatory_ballroom.height/4)
                     x = self.conservatory_ballroom.right-self.conservatory_ballroom.width/2
-                    self.conservatory_ballroom.canvas.after.clear()
                     with self.conservatory_ballroom.canvas.after:
                         Color(*self.COLORS[game_state.GREEN])
                         Ellipse(pos=(x-7.5, y-7.5), size=(15,15))
                 if game_state.WHITE in room.suspects:
                     y = self.ballroom_kitchen.top-3*(self.ballroom_kitchen.height/4)
                     x = self.ballroom_kitchen.right-self.ballroom_kitchen.width/2
-                    self.ballroom_kitchen.canvas.after.clear()
                     with self.ballroom_kitchen.canvas.after:
                         Color(*self.COLORS[game_state.WHITE])
                         Ellipse(pos=(x-7.5, y-7.5), size=(15,15))
                 if game_state.MUSTARD in room.suspects:
                     y = self.lounge_dining.top-self.lounge_dining.height/2
                     x = self.lounge_dining.right-self.lounge_dining.width/4
-                    self.lounge_dining.canvas.after.clear()
                     with self.lounge_dining.canvas.after:
                         Color(*self.COLORS[game_state.MUSTARD])
                         Ellipse(pos=(x-7.5, y-7.5), size=(15,15))
             else:
                 num_suspects = 0
-                tile = TILES[room.name]
                 for suspect in room.suspects:
                     y = tile.top-(num_suspects/2+1)*(tile.height/4)
                     if num_suspects%2 == 0:
                         x = tile.right-2*(tile.width/3)
                     else:
                         x = tile.right-tile.width/3
-                    tile.canvas.after.clear()
                     with tile.canvas.after:
                         Color(*self.COLORS[suspect])
                         Ellipse(pos=(x-7.5, y-7.5), size=(15,15))
                     num_suspects += 1
                     
+        if self.username == self.state.current_player.username:
+            self.enable_tiles()
+        else:
+            self.disable_tiles()                    
         
     def make_move(self, room):
         try:
@@ -303,8 +332,9 @@ class ControlPanel(FloatLayout):
         else:
             self.disable_buttons()
         notifications = ''
-        for note in self.state.player_messages:
-            notifications = notifications + note + '\n'
+        self.state.player_messages.reverse()
+        for message in self.state.player_messages:
+            notifications = notifications + message + '\n'
         self.notifications.text = notifications
         notes = ''
         for card in client.get_player(self.username).game_cards:
