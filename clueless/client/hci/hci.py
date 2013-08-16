@@ -12,8 +12,10 @@ from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.label import Label
 from kivy.uix.popup import Popup
 from kivy.uix.spinner import Spinner
+from kivy.graphics import Ellipse, Color
 
 from clueless.client import game_play
+from clueless.client import errors
 from clueless.model import game_state
 
 class DisableButton(Button):
@@ -39,9 +41,6 @@ class DisableButton(Button):
         if (not self.disabled):
             super(DisableButton, self).trigger_action(duration)
             
-class GamePiece(Widget):
-    pass
-
 class GameTile(DisableButton, Widget):
     pass
 
@@ -56,50 +55,39 @@ class StartScreen(Screen):
     def register_player(self):
         self.client.register_player(self.username.text)
         self.client.choose_suspect(self.username.text, self.suspect.text)
-        self.manager.get_screen('game').username = self.username.text
+        self.manager.get_screen('game').start_game(self.username.text)
         self.manager.current = self.manager.next()
 
 class GameScreen(Screen):
-    state = game_state.GameState(
-                game_id="12345",
-                players=[game_state.Player(
-                            username="testuser1",
-                            suspect=game_state.PLUM,
-                            game_cards=[game_state.GameCard(
-                                            item=game_state.WRENCH,
-                                            item_type=game_state.WEAPON)]),
-                         game_state.Player(
-                            username="testuser2",
-                            suspect=game_state.PEACOCK,
-                            game_cards=[game_state.GameCard(
-                                            item=game_state.REVOLVER,
-                                            item_type=game_state.WEAPON)])
-        ])
     gameboard = ObjectProperty(0)
     controls = ObjectProperty(0)
     
     def __init__(self, client, **kwargs):
         super(GameScreen, self).__init__(**kwargs)
         self.client = client
-        self.username=''
-        #self.state = self.client.start_new_game()
+        self.state = None
         Clock.schedule_interval(self.update, 1 / 30.)
+        
+    def start_game(self, username):
+        self.username = username
+        self.state = self.client.start_new_game()
+        self.game_id = self.state.game_id
 
     def update(self, dt):
-        self.gameboard.update(self.client, 
-                              self.state.format()["game_id"],
-                              self.username)
-        self.controls.update(self.client, 
-                             self.state.format()["game_id"],
-                             self.username)
+        if self.state != None:
+            self.gameboard.update(self.client, 
+                                  self.state.game_id,
+                                  self.username)
+            self.controls.update(self.client, 
+                                 self.state.game_id,
+                                 self.username)
+                
+    def quit_game(self):
+        self.state=None
+        self.client.destroy_game(self.game_id)
+        self.manager.current = self.manager.previous()
 
 class Gameboard(FloatLayout):
-    scarlet = ObjectProperty(None)
-    mustard = ObjectProperty(None)
-    plum = ObjectProperty(None)
-    green = ObjectProperty(None)
-    white = ObjectProperty(None)
-    peacock = ObjectProperty(None)
     study = ObjectProperty(None)
     study_hall = ObjectProperty(None)
     hall = ObjectProperty(None)
@@ -125,123 +113,179 @@ class Gameboard(FloatLayout):
     ballroom = ObjectProperty(None)
     ballroom_kitchen = ObjectProperty(None)
     kitchen = ObjectProperty(None)
-
+    
+    COLORS = {game_state.SCARLET: (1.,0,0),
+              game_state.PEACOCK: (0,0,1.),
+              game_state.PLUM: (1.,0,1.),
+              game_state.GREEN: (0,1.,0),
+              game_state.WHITE: (1.,1.,1.),
+              game_state.MUSTARD: (1.,1.,0)}
+    
     def __init__(self, **kwargs):
         super(Gameboard, self).__init__(**kwargs)
         
     def disable_tiles(self):
-        self.study.disabled=True; self.study_hall.disabled=True
-        self.hall.disabled=True; self.hall_lounge.disabled=True
-        self.lounge.disabled=True; self.study_library.disabled=True
-        self.study_billiard.disabled=True; self.hall_billiard.disabled=True
-        self.lounge_billiard.disabled=True; self.lounge_dining.disabled=True
-        self.library.disabled=True; self.library_billiard.disabled=True
-        self.billiard_room.disabled=True; self.billiard_dining.disabled=True
-        self.dining_room.disabled=True; self.library_conservatory.disabled=True
-        self.conservatory_billiard.disabled=True; self.billiard_ballroom.disabled=True
-        self.kitchen_billiard.disabled=True; self.dining_kitchen.disabled=True
-        self.conservatory.disabled=True; self.conservatory_ballroom.disabled=True
-        self.ballroom.disabled=True; self.ballroom_kitchen.disabled=True
-        self.kitchen.disabled=True;
+        self.study.disabled=True; self.study.canvas.opacity=.5
+        self.study_hall.disabled=True; self.study_hall.canvas.opacity=.5
+        self.hall.disabled=True; self.hall.canvas.opacity=.5
+        self.hall_lounge.disabled=True; self.hall_lounge.canvas.opacity=.5
+        self.lounge.disabled=True; self.lounge.canvas.opacity=.5
+        self.study_library.disabled=True; self.study_library.canvas.opacity=.5
+        self.hall_billiard.disabled=True; self.hall_billiard.canvas.opacity=.5
+        self.lounge_dining.disabled=True; self.lounge_dining.canvas.opacity=.5
+        self.library.disabled=True; self.library.canvas.opacity=.5
+        self.library_billiard.disabled=True; self.library_billiard.canvas.opacity=.5
+        self.billiard_room.disabled=True; self.billiard_room.canvas.opacity=.5
+        self.billiard_dining.disabled=True; self.billiard_dining.canvas.opacity=.5
+        self.dining_room.disabled=True; self.dining_room.canvas.opacity=.5
+        self.library_conservatory.disabled=True; self.library_conservatory.canvas.opacity=.5
+        self.billiard_ballroom.disabled=True; self.billiard_ballroom.canvas.opacity=.5
+        self.dining_kitchen.disabled=True; self.dining_kitchen.canvas.opacity=.5
+        self.conservatory.disabled=True; self.conservatory.canvas.opacity=.5
+        self.conservatory_ballroom.disabled=True; self.conservatory_ballroom.canvas.opacity=.5
+        self.ballroom.disabled=True; self.ballroom.canvas.opacity=.5
+        self.ballroom_kitchen.disabled=True; self.ballroom_kitchen.canvas.opacity=.5
+        self.kitchen.disabled=True; self.kitchen.canvas.opacity=.5
 
     def enable_tiles(self):
-        self.study.disabled=False; self.study_hall.disabled=False
-        self.hall.disabled=False; self.hall_lounge.disabled=False
-        self.lounge.disabled=False; self.study_library.disabled=False
-        self.study_billiard.disabled=False; self.hall_billiard.disabled=False
-        self.lounge_billiard.disabled=False; self.lounge_dining.disabled=False
-        self.library.disabled=False; self.library_billiard.disabled=False
-        self.billiard_room.disabled=False; self.billiard_dining.disabled=False
-        self.dining_room.disabled=False; self.library_conservatory.disabled=False
-        self.conservatory_billiard.disabled=False; self.billiard_ballroom.disabled=False
-        self.kitchen_billiard.disabled=False; self.dining_kitchen.disabled=False
-        self.conservatory.disabled=False; self.conservatory_ballroom.disabled=False
-        self.ballroom.disabled=False; self.ballroom_kitchen.disabled=False
-        self.kitchen.disabled=False
+        self.study.disabled=False; self.study.canvas.opacity=1
+        self.study_hall.disabled=False; self.study_hall.canvas.opacity=1
+        self.hall.disabled=False; self.hall.canvas.opacity=1
+        self.hall_lounge.disabled=False; self.hall_lounge.canvas.opacity=1
+        self.lounge.disabled=False; self.lounge.canvas.opacity=1
+        self.study_library.disabled=False; self.study_library.canvas.opacity=1
+        self.hall_billiard.disabled=False; self.hall_billiard.canvas.opacity=1
+        self.lounge_dining.disabled=False; self.lounge_dining.canvas.opacity=1
+        self.library.disabled=False; self.library.canvas.opacity=1
+        self.library_billiard.disabled=False; self.library_billiard.canvas.opacity=1
+        self.billiard_room.disabled=False; self.billiard_room.canvas.opacity=1
+        self.billiard_dining.disabled=False; self.billiard_dining.canvas.opacity=1
+        self.dining_room.disabled=False; self.dining_room.canvas.opacity=1
+        self.library_conservatory.disabled=False; self.library_conservatory.canvas.opacity=1
+        self.billiard_ballroom.disabled=False; self.billiard_ballroom.canvas.opacity=1
+        self.dining_kitchen.disabled=False; self.dining_kitchen.canvas.opacity=1
+        self.conservatory.disabled=False; self.conservatory.canvas.opacity=1
+        self.conservatory_ballroom.disabled=False; self.conservatory_ballroom.canvas.opacity=1
+        self.ballroom.disabled=False; self.ballroom.canvas.opacity=1
+        self.ballroom_kitchen.disabled=False; self.ballroom_kitchen.canvas.opacity=1
+        self.kitchen.disabled=False; self.kitchen.canvas.opacity=1
 
     def update(self, client, game_id, username):
+        TILES = {game_state.STUDY: self.study,
+                 game_state.STUDY_HALL: self.study_hall,
+                 game_state.HALL: self.hall,
+                 game_state.HALL_LOUNGE: self.hall_lounge,
+                 game_state.LOUNGE: self.lounge,
+                 game_state.STUDY_LIBRARY: self.study_library,
+                 game_state.HALL_BILLIARD: self.hall_billiard,
+                 game_state.LOUNGE_DINING: self.lounge_dining,
+                 game_state.LIBRARY: self.library,
+                 game_state.LIBRARY_BILLIARD: self.library_billiard,
+                 game_state.BILLIARD_ROOM: self.billiard_room,
+                 game_state.BILLIARD_DINING: self.billiard_dining,
+                 game_state.DINING_ROOM: self.dining_room,
+                 game_state.LIBRARY_CONSERVATORY: self.library_conservatory,
+                 game_state.BILLIARD_BALLROOM: self.billiard_ballroom,
+                 game_state.DINING_KITCHEN: self.dining_kitchen,
+                 game_state.CONSERVATORY: self.conservatory,
+                 game_state.CONSERVATORY_BALLROOM: self.conservatory_ballroom,
+                 game_state.BALLROOM: self.ballroom,
+                 game_state.BALLROOM_KITCHEN: self.ballroom_kitchen,
+                 game_state.KITCHEN: self.kitchen,
+                 game_state.SCARLET: self.hall_lounge,
+                 game_state.PEACOCK: self.library_conservatory,
+                 game_state.PLUM: self.study_library,
+                 game_state.GREEN: self.conservatory_ballroom,
+                 game_state.WHITE: self.ballroom_kitchen,
+                 game_state.MUSTARD: self.lounge_dining}
+
         self.client = client
         self.username = username
-        '''self.state = self.client.get_game_state(game_id)
-        if username == self.state.current_player.format['username']:
-            self.enable_tiles()
-        else:
-            self.disable_tiles()
-        for room in self.state.game_board:
-            if room.name in game_state.SUSPECTS:
-                if room.suspects[0] == game_state.SCARLET:
-                    self.scarlet.center_y = self.hall_lounge.top-self.hall_lounge.height/4
-                    self.scarlet.center_x = self.hall_lounge.right-self.hall_lounge.width/2
-                if room.suspects[0] == game_state.PEACOCK:
-                    self.peacock.center_y = self.library_conservatory.top-self.library_conservatory.height/2
-                    self.peacock.center_x = self.library_conservatory.right-3*(self.library_conservatory.width/4)
-                if room.suspects[0] == game_state.PLUM:
-                    self.plum.center_y = self.study_library.top-self.study_library.height/2
-                    self.plum.center_x = self.study_library.right-3*(self.study_library.width/4)
-                if room.suspects[0] == game_state.GREEN:
-                    self.green.center_y = self.conservatory_ballroom.top-3*(self.conservatory_ballroom.height/4)
-                    self.green.center_x = self.conservatory_ballroom.right-self.conservatory_ballroom.width/2
-                if room.suspects[0] == game_state.WHITE:
-                    self.white.center_y = self.ballroom_kitchen.top-3*(self.ballroom_kitchen.height/4)
-                    self.white.center_x = self.ballroom_kitchen.right-self.ballroom_kitchen.width/2
-                if room.suspects[0] == game_state.MUSTARD:
-                    self.mustard.center_y = self.lounge_dining.top-self.lounge_dining.height/2
-                    self.mustard.center_x = self.lounge_dining.right-self.lounge_dining.width/4
+        self.state = self.client.get_game_state(game_id)
+        self.suspect = self.client.get_player(self.username).suspect
+        
+        self.hall_lounge.canvas.after.clear()
+        self.library_conservatory.canvas.after.clear()
+        self.study_library.canvas.after.clear()
+        self.conservatory_ballroom.canvas.after.clear()
+        self.ballroom_kitchen.canvas.after.clear()
+        self.lounge_dining.canvas.after.clear()
+        
+        for name, room in self.state.game_board.iteritems():
+            tile = TILES[room.name]
+            if tile != self.hall_lounge and \
+               tile != self.library_conservatory and \
+               tile != self.study_library and \
+               tile != self.conservatory_ballroom and \
+               tile != self.ballroom_kitchen and \
+               tile != self.lounge_dining:
+                tile.canvas.after.clear()
+            if name in game_state.SUSPECTS:
+                if game_state.SCARLET in room.suspects:
+                    y = self.hall_lounge.top-self.hall_lounge.height/4
+                    x = self.hall_lounge.right-self.hall_lounge.width/2
+                    with self.hall_lounge.canvas.after:
+                        Color(*self.COLORS[game_state.SCARLET])
+                        Ellipse(pos=(x-7.5, y-7.5), size=(15,15))
+                if game_state.PEACOCK in room.suspects:
+                    y = self.library_conservatory.top-self.library_conservatory.height/2
+                    x = self.library_conservatory.right-3*(self.library_conservatory.width/4)
+                    with self.library_conservatory.canvas.after:
+                        Color(*self.COLORS[game_state.PEACOCK])
+                        Ellipse(pos=(x-7.5, y-7.5), size=(15,15))
+                if game_state.PLUM in room.suspects:
+                    y = self.study_library.top-self.study_library.height/2
+                    x = self.study_library.right-3*(self.study_library.width/4)
+                    with self.study_library.canvas.after:
+                        Color(*self.COLORS[game_state.PLUM])
+                        Ellipse(pos=(x-7.5, y-7.5), size=(15,15))
+                if game_state.GREEN in room.suspects:
+                    y = self.conservatory_ballroom.top-3*(self.conservatory_ballroom.height/4)
+                    x = self.conservatory_ballroom.right-self.conservatory_ballroom.width/2
+                    with self.conservatory_ballroom.canvas.after:
+                        Color(*self.COLORS[game_state.GREEN])
+                        Ellipse(pos=(x-7.5, y-7.5), size=(15,15))
+                if game_state.WHITE in room.suspects:
+                    y = self.ballroom_kitchen.top-3*(self.ballroom_kitchen.height/4)
+                    x = self.ballroom_kitchen.right-self.ballroom_kitchen.width/2
+                    with self.ballroom_kitchen.canvas.after:
+                        Color(*self.COLORS[game_state.WHITE])
+                        Ellipse(pos=(x-7.5, y-7.5), size=(15,15))
+                if game_state.MUSTARD in room.suspects:
+                    y = self.lounge_dining.top-self.lounge_dining.height/2
+                    x = self.lounge_dining.right-self.lounge_dining.width/4
+                    with self.lounge_dining.canvas.after:
+                        Color(*self.COLORS[game_state.MUSTARD])
+                        Ellipse(pos=(x-7.5, y-7.5), size=(15,15))
             else:
                 num_suspects = 0
                 for suspect in room.suspects:
-                    if suspect == game_state.SCARLET:
-                        my_suspect = self.scarlet
-                    if suspect == game_state.PEACOCK:
-                        my_suspect = self.peacock
-                    if suspect == game_state.PLUM:
-                        my_suspect = self.plum
-                    if suspect == game_state.GREEN:
-                        my_suspect = self.green
-                    if suspect == game_state.WHITE:
-                        my_suspect = self.white
-                    if suspect == game_state.MUSTARD:
-                        my_suspect = self.mustard
-                    my_suspect.parent.remove_widget(my_suspect)
-                    # need to translate room.name for my_room (hard-coded to conservatory)
-                    my_room = self.conservatory
-                    my_room.add_widget(my_suspect)
-                    my_suspect.center_y = my_room.top-(num_suspects/2+1)*(my_room.height/4)
-                    if num_suspects%2 == 0:
-                        my_suspect.center_x = self.my_room.right-2*(my_room.width/3)
+                    if ('hallway' in name):
+                        y = tile.top-(tile.height/2)
+                        x = tile.right-(tile.width/2)
                     else:
-                        my_suspect.center_x = self.my_room.right-my_room.width/3
-                    num_suspects += 1'''
-
-        self.scarlet.parent.remove_widget(self.scarlet)
-        self.hall_lounge.add_widget(self.scarlet)
-        self.scarlet.center_y = self.hall_lounge.top-self.hall_lounge.height/4
-        self.scarlet.center_x = self.hall_lounge.right-self.hall_lounge.width/2
+                        y = tile.top-(num_suspects/2+1)*(tile.height/4)
+                        if num_suspects%2 == 0:
+                            x = tile.right-2*(tile.width/3)
+                        else:
+                            x = tile.right-tile.width/3
+                    with tile.canvas.after:
+                        Color(*self.COLORS[suspect])
+                        Ellipse(pos=(x-7.5, y-7.5), size=(15,15))
+                    num_suspects += 1
+                    
+        # enable the game tiles if it's the user's turn, otherwise disable them
+        if self.username == self.state.current_player.username:
+            self.enable_tiles()
+        else:
+            self.disable_tiles()                    
         
-        self.peacock.parent.remove_widget(self.peacock)
-        self.library_conservatory.add_widget(self.peacock)
-        self.peacock.center_y = self.library_conservatory.top-self.library_conservatory.height/2
-        self.peacock.center_x = self.library_conservatory.right-3*(self.library_conservatory.width/4)
-        
-        self.plum.parent.remove_widget(self.plum)
-        self.study_library.add_widget(self.plum)
-        self.plum.center_y = self.study_library.top-self.study_library.height/2
-        self.plum.center_x = self.study_library.right-3*(self.study_library.width/4)
-        
-        self.green.parent.remove_widget(self.green)
-        self.conservatory_ballroom.add_widget(self.green)
-        self.green.center_y = self.conservatory_ballroom.top-3*(self.conservatory_ballroom.height/4)
-        self.green.center_x = self.conservatory_ballroom.right-self.conservatory_ballroom.width/2
-        
-        self.white.parent.remove_widget(self.white)
-        self.ballroom_kitchen.add_widget(self.white)
-        self.white.center_y = self.ballroom_kitchen.top-3*(self.ballroom_kitchen.height/4)
-        self.white.center_x = self.ballroom_kitchen.right-self.ballroom_kitchen.width/2
-        
-        self.mustard.parent.remove_widget(self.mustard)
-        self.lounge_dining.add_widget(self.mustard)
-        self.mustard.center_y = self.lounge_dining.top-self.lounge_dining.height/2
-        self.mustard.center_x = self.lounge_dining.right-self.lounge_dining.width/4
+    def make_move(self, room):
+        try:
+            self.client.move_player(self.username, self.suspect, room)
+        except errors.GameClientException:
+            p = ErrorPopup(message="Invalid move. Please select a valid move.")
+            p.open()
         
     def debug(self):
         import pdb; pdb.set_trace()
@@ -249,65 +293,106 @@ class Gameboard(FloatLayout):
 class ControlPanel(FloatLayout):
     notifications = ObjectProperty(None)
     notepad = ObjectProperty(None)
-    suggest = ObjectProperty(None)
-    accuse = ObjectProperty(None)
-    end_turn = ObjectProperty(None)
+    suggest_button = ObjectProperty(None)
+    accuse_button = ObjectProperty(None)
+    end_turn_button = ObjectProperty(None)
     
     def __init__(self, **kwargs):
         super(ControlPanel, self).__init__(**kwargs)
+        self.disproving = False
 
     def update(self, client, game_id, username):
         self.client = client
         self.username = username
-        '''self.state = self.client.get_game_state(game_id)
-        self.notifications.text = self.state.player_messages
-        notes = ''
-        for card in client.get_player(self.username).game_cards:
-            notes += card.item, ":", card.type
-        for card in client.get_player(self.username).card_items_seen:
-            notes += card.item, ":", card.type
-        self.notepad.text = notes
-        if username == self.state.current_player.format['username']:
+        self.state = self.client.get_game_state(game_id)
+        if username == self.state.current_player.username:
             self.enable_buttons()
         else:
-            self.disable_buttons()'''
+            self.disable_buttons()
+        notifications = ''
+        self.state.player_messages.reverse()
+        for message in self.state.player_messages:
+            notifications = notifications + message + '\n'
+        self.notifications.text = notifications
+        notes = ''
+        for card in client.get_player(self.username).game_cards:
+            notes += card['item'] + " : " + card['item_type'] + '\n'
+        for card in client.get_player(self.username).card_items_seen:
+            notes += card['item'] + " : " + card['item_type'] + '\n'
+        self.notepad.text = notes
+        if self.state.suggestion_response_player != None and \
+           self.state.suggestion_response_player.username == self.username and \
+           not self.disproving:
+            self.disproving = True
+            self.disprove_suggestion_popup()
                 
     def disable_buttons(self):
-        self.suggest.disabled=True
-        self.accuse.disabled=True
-        self.end_turn.disabled=True
+        self.suggest_button.disabled=True; self.suggest_button.canvas.opacity=.5
+        self.accuse_button.disabled=True; self.accuse_button.canvas.opacity=.5
+        self.end_turn_button.disabled=True; self.end_turn_button.canvas.opacity=.5
         
     def enable_buttons(self):
-        self.suggest.disabled=False
-        self.accuse.disabled=False
-        self.end_turn.disabled=False
+        self.suggest_button.disabled=False; self.suggest_button.canvas.opacity=1
+        self.accuse_button.disabled=False; self.accuse_button.canvas.opacity=1
+        self.end_turn_button.disabled=False; self.end_turn_button.canvas.opacity=1
         
-    def suggest_popup(self):
-        p = SuggestionPopup()
-        p.open()
+    def disprove_suggestion(self):
+        self.client.make_suggestion_response(self.username, self.spinner.text)
+        self.popup.dismiss
+        self.disproving = False
         
     def disprove_suggestion_popup(self):
-        btnclose = Button(text='Submit', size_hint_y=None, height='50sp')
+        submit_button = Button(text='Submit', size_hint_y=None, height='50sp')
         content = BoxLayout(orientation='vertical', padding=10, spacing=10)
-        content.add_widget(Label(text='Miss Scarlet suggested Colonel \nMustard in Library with Revolver.'))
-        content.add_widget(Label(text='Select card to prove false'))
-        spinner = Spinner(text='Card',
-                          values=('Knife', 'Library'),
+        content.add_widget(Label(text='Select card to disprove the Suggestion'))
+        cards = ()
+        #import pdb; pdb.set_trace()
+        for card in self.client.get_player(self.username).game_cards:
+            if card['item'] == self.state.current_suggestion.suspect or \
+               card['item'] == self.state.current_suggestion.weapon or \
+               card['item'] == self.state.current_suggestion.room:
+                cards = cards + (card['item'],)
+        self.spinner = Spinner(text='Card',
+                          values=(cards),
                           size_hint=(None, None), size=(100, 44),
                           pos_hint={'center_x': .5, 'center_y': .5})
-        content.add_widget(spinner)
-        content.add_widget(btnclose)
-        popup = Popup(content=content, title='Prove Suggestion False',
+        content.add_widget(self.spinner)
+        content.add_widget(submit_button)
+        self.popup = Popup(content=content, title='Prove Suggestion False',
                       size_hint=(None, None), size=('300dp', '300dp'))
-        btnclose.bind(on_release=popup.dismiss)
-        popup.open()
-
-    def accuse_popup(self):
-        p = AccusationPopup()
+        #submit_button.bind(on_release=self.disprove_suggestion())
+        submit_button.bind(on_release=self.popup.dismiss)
+        self.popup.open()
+        
+    def suggest_popup(self):
+        p = SuggestionPopup(client=self.client, state=self.state)
         p.open()
+        
+    def accuse_popup(self):
+        p = AccusationPopup(client=self.client, state=self.state)
+        p.open()
+        
+    def end_turn(self):
+        self.client.end_turn(self.username)
 
 class AccusationPopup(Popup):
+    suspect = ObjectProperty(None)
+    weapon = ObjectProperty(None)
+    room = ObjectProperty(None)
+
+    def __init__(self, client, state, **kwargs):
+        super(AccusationPopup, self).__init__(**kwargs)
+        self.client = client
+        self.state = state
     
+    def make_accusation(self):
+        self.client.make_accusation(self.state.current_player.username,
+                                    self.suspect.text,
+                                    self.weapon.text,
+                                    self.room.text)
+        self.popup.dismiss()
+        self.dismiss()
+
     def confirm_popup(self):
         content = BoxLayout(orientation='vertical', padding=10, spacing=10)
         content.add_widget(Label(text='Are you sure you want to make an Accusation?'))
@@ -315,19 +400,43 @@ class AccusationPopup(Popup):
         cancelButton = Button(text='Cancel', size_hint_y=None, height='50sp')
         content.add_widget(accuseButton)
         content.add_widget(cancelButton)
-        popup = Popup(content=content, title='Make Accusation?', auto_dismiss=False,
+        self.popup = Popup(content=content, title='Make Accusation?', auto_dismiss=False,
                       size_hint=(None, None), size=('500dp', '300dp'))
-        cancelButton.bind(on_release=popup.dismiss)
-        accuseButton.bind(on_release=popup.dismiss)
-        popup.open()
+        cancelButton.bind(on_release=self.popup.dismiss)
+        accuseButton.bind(on_release=self.make_accusation())
+        self.popup.open()
         '''content.add_widget(Label(text='You Win!'))
         content.add_widget(Label(text='Please continue playing.'))
         popup = Popup(content=content, title='Accusation Correct',
                       size_hint=(None, None), size=('300dp', '300dp'))'''
 
 class SuggestionPopup(Popup):
-    pass
+    suspect = ObjectProperty(None)
+    weapon = ObjectProperty(None)
 
+    def __init__(self, client, state, **kwargs):
+        super(SuggestionPopup, self).__init__(**kwargs)
+        self.client = client
+        self.state = state
+    
+    def make_suggestion(self):
+        username = self.state.current_player.username
+        for room in self.state.game_board.values():
+            if self.state.current_player.suspect in room.suspects:
+                break
+        self.client.make_suggestion(username,
+                                    self.suspect.text,
+                                    self.weapon.text,
+                                    room.name)
+        self.dismiss()
+
+class ErrorPopup(Popup):
+    message = ObjectProperty(None)
+
+    def __init__(self, message, **kwargs):
+        super(ErrorPopup, self).__init__(**kwargs)
+        self.message.text = message
+    
 class CluelessApp(App):
 
     def build(self):
