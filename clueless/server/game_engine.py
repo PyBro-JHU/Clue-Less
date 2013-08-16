@@ -159,6 +159,7 @@ class GameEngine(object):
         #validate the move request
         self._validate_player(player_username)
         self._validate_player_turn(player_username)
+        self._validate_turn_status(game_state.AWAITING_MOVE)
         self._validate_suspect(suspect)
         self._validate_current_player_owns_suspect(suspect)
         self._validate_space(space_name)
@@ -473,6 +474,15 @@ class GameEngine(object):
         """
         if username != self.game.current_player.username:
             raise errors.PlayerOperationOutOfTurnException
+
+    def _validate_turn_status(self, validate_status):
+        """
+        validates that the current turn status matching the status passed in
+        """
+        if self.game.turn_status != validate_status:
+            msg = "Invalid operation for turn status. {status}".format(
+                status=self.game.turn_status)
+            raise errors.TurnStatusException(msg)
 
     def _validate_suggestion_response_player(self, username):
         """

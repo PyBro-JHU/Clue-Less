@@ -16,6 +16,11 @@ class PlayerOperationOutOfTurnException(GameEngineException):
         super(PlayerOperationOutOfTurnException, self).__init__(msg)
 
 
+class TurnStatusException(GameEngineException):
+    def __init__(self, msg):
+        super(TurnStatusException, self).__init__(msg)
+
+
 class PlayerInvalidSuspectException(GameEngineException):
     def __init__(self):
         msg = "Player does not own this supsect"
