@@ -81,6 +81,34 @@ class GameScreen(Screen):
             self.controls.update(self.client, 
                                  self.state.game_id,
                                  self.username)
+            if self.state.suggestion_response_player != None and \
+               self.state.suggestion_response_player.username == self.username:
+                self.disprove_suggestion_popup()
+                
+    def disprove_suggestion_popup(self):
+        btnclose = Button(text='Submit', size_hint_y=None, height='50sp')
+        content = BoxLayout(orientation='vertical', padding=10, spacing=10)
+        content.add_widget(Label(text='Select card to disprove the Suggestion'))
+        cards = ()
+        for card in self.client.get_player(self.username).game_cards:
+            if card['item'] == self.state.current_suggestion.suspect or \
+               card['item'] == self.state.current_suggestion.weapon or \
+               card['item'] == self.state.current_suggestion.room:
+                cards += card['item']
+        self.spinner = Spinner(text='Card',
+                          values=(cards),
+                          size_hint=(None, None), size=(100, 44),
+                          pos_hint={'center_x': .5, 'center_y': .5})
+        content.add_widget(self.spinner)
+        content.add_widget(btnclose)
+        self.popup = Popup(content=content, title='Prove Suggestion False',
+                      size_hint=(None, None), size=('300dp', '300dp'))
+        btnclose.bind(on_release=self.disprove_suggestion())
+        self.popup.open()
+        
+    def disprove_suggestion(self):
+        self.client.make_suggestion_response(self.username, self.spinner.text)
+        self.popup.dismiss()
         
     def quit_game(self):
         self.state=None
@@ -120,7 +148,7 @@ class Gameboard(FloatLayout):
               game_state.GREEN: (0,1.,0),
               game_state.WHITE: (1.,1.,1.),
               game_state.MUSTARD: (1.,1.,0)}
-
+    
     def __init__(self, **kwargs):
         super(Gameboard, self).__init__(**kwargs)
         
@@ -129,13 +157,13 @@ class Gameboard(FloatLayout):
         self.study_hall.disabled=True
         self.hall.disabled=True; self.hall_lounge.disabled=True
         self.lounge.disabled=True; self.study_library.disabled=True
-        self.study_billiard.disabled=True; self.hall_billiard.disabled=True
-        self.lounge_billiard.disabled=True; self.lounge_dining.disabled=True
+        self.hall_billiard.disabled=True
+        self.lounge_dining.disabled=True
         self.library.disabled=True; self.library_billiard.disabled=True
         self.billiard_room.disabled=True; self.billiard_dining.disabled=True
         self.dining_room.disabled=True; self.library_conservatory.disabled=True
-        self.conservatory_billiard.disabled=True; self.billiard_ballroom.disabled=True
-        self.kitchen_billiard.disabled=True; self.dining_kitchen.disabled=True
+        self.billiard_ballroom.disabled=True
+        self.dining_kitchen.disabled=True
         self.conservatory.disabled=True; self.conservatory_ballroom.disabled=True
         self.ballroom.disabled=True; self.ballroom_kitchen.disabled=True
         self.kitchen.disabled=True;
@@ -144,20 +172,44 @@ class Gameboard(FloatLayout):
         self.study.disabled=False; self.study_hall.disabled=False
         self.hall.disabled=False; self.hall_lounge.disabled=False
         self.lounge.disabled=False; self.study_library.disabled=False
-        self.study_billiard.disabled=False; self.hall_billiard.disabled=False
-        self.lounge_billiard.disabled=False; self.lounge_dining.disabled=False
+        self.hall_billiard.disabled=False
+        self.lounge_dining.disabled=False
         self.library.disabled=False; self.library_billiard.disabled=False
         self.billiard_room.disabled=False; self.billiard_dining.disabled=False
         self.dining_room.disabled=False; self.library_conservatory.disabled=False
-        self.conservatory_billiard.disabled=False; self.billiard_ballroom.disabled=False
-        self.kitchen_billiard.disabled=False; self.dining_kitchen.disabled=False
+        self.billiard_ballroom.disabled=False
+        self.dining_kitchen.disabled=False
         self.conservatory.disabled=False; self.conservatory_ballroom.disabled=False
         self.ballroom.disabled=False; self.ballroom_kitchen.disabled=False
         self.kitchen.disabled=False
 
     def update(self, client, game_id, username):
+        TILES = {game_state.STUDY: self.study,
+                 game_state.STUDY_HALL: self.study_hall,
+                 game_state.HALL: self.hall,
+                 game_state.HALL_LOUNGE: self.hall_lounge,
+                 game_state.LOUNGE: self.lounge,
+                 game_state.STUDY_LIBRARY: self.study_library,
+                 game_state.HALL_BILLIARD: self.hall_billiard,
+                 game_state.LOUNGE_DINING: self.lounge_dining,
+                 game_state.LIBRARY: self.library,
+                 game_state.LIBRARY_BILLIARD: self.library_billiard,
+                 game_state.BILLIARD_ROOM: self.billiard_room,
+                 game_state.BILLIARD_DINING: self.billiard_dining,
+                 game_state.DINING_ROOM: self.dining_room,
+                 game_state.LIBRARY_CONSERVATORY: self.library_conservatory,
+                 game_state.BILLIARD_BALLROOM: self.billiard_ballroom,
+                 game_state.DINING_KITCHEN: self.dining_kitchen,
+                 game_state.CONSERVATORY: self.conservatory,
+                 game_state.CONSERVATORY_BALLROOM: self.conservatory_ballroom,
+                 game_state.BALLROOM: self.ballroom,
+                 game_state.BALLROOM_KITCHEN: self.ballroom_kitchen,
+                 game_state.KITCHEN: self.kitchen}
+
         self.client = client
+        self.username = username
         self.state = self.client.get_game_state(game_id)
+        self.suspect = self.client.get_player(self.username).suspect
         if username == self.state.current_player.username:
             self.enable_tiles()
         else:
@@ -167,63 +219,77 @@ class Gameboard(FloatLayout):
                 if game_state.SCARLET in room.suspects:
                     y = self.hall_lounge.top-self.hall_lounge.height/4
                     x = self.hall_lounge.right-self.hall_lounge.width/2
+                    self.hall_lounge.canvas.after.clear()
                     with self.hall_lounge.canvas.after:
                         Color(*self.COLORS[game_state.SCARLET])
                         Ellipse(pos=(x-7.5, y-7.5), size=(15,15))
                 if game_state.PEACOCK in room.suspects:
                     y = self.library_conservatory.top-self.library_conservatory.height/2
                     x = self.library_conservatory.right-3*(self.library_conservatory.width/4)
+                    self.library_conservatory.canvas.after.clear()
                     with self.library_conservatory.canvas.after:
                         Color(*self.COLORS[game_state.PEACOCK])
                         Ellipse(pos=(x-7.5, y-7.5), size=(15,15))
                 if game_state.PLUM in room.suspects:
                     y = self.study_library.top-self.study_library.height/2
                     x = self.study_library.right-3*(self.study_library.width/4)
+                    self.study_library.canvas.after.clear()
                     with self.study_library.canvas.after:
                         Color(*self.COLORS[game_state.PLUM])
                         Ellipse(pos=(x-7.5, y-7.5), size=(15,15))
                 if game_state.GREEN in room.suspects:
                     y = self.conservatory_ballroom.top-3*(self.conservatory_ballroom.height/4)
                     x = self.conservatory_ballroom.right-self.conservatory_ballroom.width/2
+                    self.conservatory_ballroom.canvas.after.clear()
                     with self.conservatory_ballroom.canvas.after:
                         Color(*self.COLORS[game_state.GREEN])
                         Ellipse(pos=(x-7.5, y-7.5), size=(15,15))
                 if game_state.WHITE in room.suspects:
                     y = self.ballroom_kitchen.top-3*(self.ballroom_kitchen.height/4)
                     x = self.ballroom_kitchen.right-self.ballroom_kitchen.width/2
+                    self.ballroom_kitchen.canvas.after.clear()
                     with self.ballroom_kitchen.canvas.after:
                         Color(*self.COLORS[game_state.WHITE])
                         Ellipse(pos=(x-7.5, y-7.5), size=(15,15))
                 if game_state.MUSTARD in room.suspects:
                     y = self.lounge_dining.top-self.lounge_dining.height/2
                     x = self.lounge_dining.right-self.lounge_dining.width/4
+                    self.lounge_dining.canvas.after.clear()
                     with self.lounge_dining.canvas.after:
                         Color(*self.COLORS[game_state.MUSTARD])
                         Ellipse(pos=(x-7.5, y-7.5), size=(15,15))
             else:
                 num_suspects = 0
+                tile = TILES[room.name]
                 for suspect in room.suspects:
-                    # need to translate name for my_room (hard-coded to conservatory)
-                    my_room = self.conservatory
-                    y = my_room.top-(num_suspects/2+1)*(my_room.height/4)
+                    y = tile.top-(num_suspects/2+1)*(tile.height/4)
                     if num_suspects%2 == 0:
-                        x = self.my_room.right-2*(my_room.width/3)
+                        x = tile.right-2*(tile.width/3)
                     else:
-                        x = self.my_room.right-my_room.width/3
-                    with self.my_room.canvas.after:
+                        x = tile.right-tile.width/3
+                    tile.canvas.after.clear()
+                    with tile.canvas.after:
                         Color(*self.COLORS[suspect])
                         Ellipse(pos=(x-7.5, y-7.5), size=(15,15))
                     num_suspects += 1
                     
+        
+    def make_move(self, room):
+        try:
+            self.client.move_player(self.username, self.suspect, room)
+        except errors.GameClientException:
+            p = ErrorPopup(message="Invalid move. Please select a valid move.")
+            p.open()
+        
     def debug(self):
         import pdb; pdb.set_trace()
 
 class ControlPanel(FloatLayout):
     notifications = ObjectProperty(None)
     notepad = ObjectProperty(None)
-    suggest = ObjectProperty(None)
-    accuse = ObjectProperty(None)
-    end_turn = ObjectProperty(None)
+    suggest_button = ObjectProperty(None)
+    accuse_button = ObjectProperty(None)
+    end_turn_button = ObjectProperty(None)
     
     def __init__(self, **kwargs):
         super(ControlPanel, self).__init__(**kwargs)
@@ -232,6 +298,10 @@ class ControlPanel(FloatLayout):
         self.client = client
         self.username = username
         self.state = self.client.get_game_state(game_id)
+        if username == self.state.current_player.username:
+            self.enable_buttons()
+        else:
+            self.disable_buttons()
         notifications = ''
         for note in self.state.player_messages:
             notifications = notifications + note + '\n'
@@ -242,47 +312,46 @@ class ControlPanel(FloatLayout):
         for card in client.get_player(self.username).card_items_seen:
             notes += card['item'] + " : " + card['item_type'] + '\n'
         self.notepad.text = notes
-        if username == self.state.current_player.username:
-            self.enable_buttons()
-        else:
-            self.disable_buttons()
                 
     def disable_buttons(self):
-        self.suggest.disabled=True; self.suggest.canvas.opacity=.5
-        self.accuse.disabled=True; self.accuse.canvas.opacity=.5
-        self.end_turn.disabled=True; self.end_turn.canvas.opacity=.5
+        self.suggest_button.disabled=True; self.suggest_button.canvas.opacity=.5
+        self.accuse_button.disabled=True; self.accuse_button.canvas.opacity=.5
+        self.end_turn_button.disabled=True; self.end_turn_button.canvas.opacity=.5
         
     def enable_buttons(self):
-        self.suggest.disabled=False; self.suggest.canvas.opacity=1
-        self.accuse.disabled=False; self.accuse.canvas.opacity=1
-        self.end_turn.disabled=False; self.end_turn.canvas.opacity=1
+        self.suggest_button.disabled=False; self.suggest_button.canvas.opacity=1
+        self.accuse_button.disabled=False; self.accuse_button.canvas.opacity=1
+        self.end_turn_button.disabled=False; self.end_turn_button.canvas.opacity=1
         
     def suggest_popup(self):
-        p = SuggestionPopup()
+        p = SuggestionPopup(client=self.client, state=self.state)
         p.open()
         
-    def disprove_suggestion_popup(self):
-        btnclose = Button(text='Submit', size_hint_y=None, height='50sp')
-        content = BoxLayout(orientation='vertical', padding=10, spacing=10)
-        content.add_widget(Label(text='Miss Scarlet suggested Colonel \nMustard in Library with Revolver.'))
-        content.add_widget(Label(text='Select card to prove false'))
-        spinner = Spinner(text='Card',
-                          values=('Knife', 'Library'),
-                          size_hint=(None, None), size=(100, 44),
-                          pos_hint={'center_x': .5, 'center_y': .5})
-        content.add_widget(spinner)
-        content.add_widget(btnclose)
-        popup = Popup(content=content, title='Prove Suggestion False',
-                      size_hint=(None, None), size=('300dp', '300dp'))
-        btnclose.bind(on_release=popup.dismiss)
-        popup.open()
-
     def accuse_popup(self):
-        p = AccusationPopup()
+        p = AccusationPopup(client=self.client, state=self.state)
         p.open()
+        
+    def end_turn(self):
+        self.client.end_turn(self.username)
 
 class AccusationPopup(Popup):
+    suspect = ObjectProperty(None)
+    weapon = ObjectProperty(None)
+    room = ObjectProperty(None)
+
+    def __init__(self, client, state, **kwargs):
+        super(AccusationPopup, self).__init__(**kwargs)
+        self.client = client
+        self.state = state
     
+    def make_accusation(self):
+        self.client.make_accusation(self.state.current_player.username,
+                                    self.suspect.text,
+                                    self.weapon.text,
+                                    self.room.text)
+        self.popup.dismiss()
+        self.dismiss()
+
     def confirm_popup(self):
         content = BoxLayout(orientation='vertical', padding=10, spacing=10)
         content.add_widget(Label(text='Are you sure you want to make an Accusation?'))
@@ -290,19 +359,43 @@ class AccusationPopup(Popup):
         cancelButton = Button(text='Cancel', size_hint_y=None, height='50sp')
         content.add_widget(accuseButton)
         content.add_widget(cancelButton)
-        popup = Popup(content=content, title='Make Accusation?', auto_dismiss=False,
+        self.popup = Popup(content=content, title='Make Accusation?', auto_dismiss=False,
                       size_hint=(None, None), size=('500dp', '300dp'))
-        cancelButton.bind(on_release=popup.dismiss)
-        accuseButton.bind(on_release=popup.dismiss)
-        popup.open()
+        cancelButton.bind(on_release=self.popup.dismiss)
+        accuseButton.bind(on_release=self.make_accusation())
+        self.popup.open()
         '''content.add_widget(Label(text='You Win!'))
         content.add_widget(Label(text='Please continue playing.'))
         popup = Popup(content=content, title='Accusation Correct',
                       size_hint=(None, None), size=('300dp', '300dp'))'''
 
 class SuggestionPopup(Popup):
-    pass
+    suspect = ObjectProperty(None)
+    weapon = ObjectProperty(None)
 
+    def __init__(self, client, state, **kwargs):
+        super(SuggestionPopup, self).__init__(**kwargs)
+        self.client = client
+        self.state = state
+    
+    def make_suggestion(self):
+        username = self.state.current_player.username
+        for room in self.state.game_board.values():
+            if self.state.current_player.suspect in room.suspects:
+                break
+        self.client.make_suggestion(username,
+                                    self.suspect.text,
+                                    self.weapon.text,
+                                    room.name)
+        self.dismiss()
+
+class ErrorPopup(Popup):
+    message = ObjectProperty(None)
+
+    def __init__(self, message, **kwargs):
+        super(ErrorPopup, self).__init__(**kwargs)
+        self.message.text = message
+    
 class CluelessApp(App):
 
     def build(self):
