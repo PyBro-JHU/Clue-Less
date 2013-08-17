@@ -9,7 +9,7 @@ class WhenTestingGameCard(unittest.TestCase):
             item=game_state.WRENCH, item_type=game_state.WEAPON)
         card__dict = game_card.format()
         self.assertEqual(game_card.item, card__dict["item"])
-        self.assertEqual(game_card.type, card__dict["type"])
+        self.assertEqual(game_card.type, card__dict["item_type"])
 
 
 class WhenTestingPlayer(unittest.TestCase):
