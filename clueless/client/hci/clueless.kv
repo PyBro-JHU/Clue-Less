@@ -385,6 +385,30 @@
                 height: '50sp'
                 on_release: root.dismiss()
                 
+<SuggestionResponsePopup>:
+    card: _card
+    
+    auto_dismiss: False
+    title: 'Prove Suggestion False'
+    size_hint: None, None
+    size: '300dp', '300dp'
+    BoxLayout:
+        orientation: 'vertical'
+        padding: 10
+        spacing: 10
+        Label:
+            text: 'Select a card to disprove the Suggestion.'
+        Spinner:
+            id: _card
+            size_hint_y: None
+            height: 34
+            text: 'Card'
+        Button:
+            text: 'Submit'
+            size_hint_y: None
+            height: '50sp'
+            on_release: root.disprove_suggestion()
+                
 <ErrorPopup>:
     message: _message
     auto_dismiss: True

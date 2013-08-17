@@ -287,9 +287,6 @@ class Gameboard(FloatLayout):
             p = ErrorPopup(message="Invalid move. Please select a valid move.")
             p.open()
         
-    def debug(self):
-        import pdb; pdb.set_trace()
-
 class ControlPanel(FloatLayout):
     notifications = ObjectProperty(None)
     notepad = ObjectProperty(None)
@@ -317,9 +314,13 @@ class ControlPanel(FloatLayout):
         notes = ''
         for card in client.get_player(self.username).game_cards:
             notes += card['item'] + " : " + card['item_type'] + '\n'
-        for card in client.get_player(self.username).card_items_seen:
-            notes += card['item'] + " : " + card['item_type'] + '\n'
+        #for card in client.get_player(self.username).card_items_seen:
+        #    notes += card['item'] + " : " + card['item_type'] + '\n'
         self.notepad.text = notes
+        if self.state.suggestion_response_player == None or \
+           (self.state.suggestion_response_player != None and \
+           self.state.suggestion_response_player.username != self.username):
+            self.disproving = False
         if self.state.suggestion_response_player != None and \
            self.state.suggestion_response_player.username == self.username and \
            not self.disproving:
@@ -336,33 +337,16 @@ class ControlPanel(FloatLayout):
         self.accuse_button.disabled=False; self.accuse_button.canvas.opacity=1
         self.end_turn_button.disabled=False; self.end_turn_button.canvas.opacity=1
         
-    def disprove_suggestion(self):
-        self.client.make_suggestion_response(self.username, self.spinner.text)
-        self.popup.dismiss
-        self.disproving = False
-        
     def disprove_suggestion_popup(self):
-        submit_button = Button(text='Submit', size_hint_y=None, height='50sp')
-        content = BoxLayout(orientation='vertical', padding=10, spacing=10)
-        content.add_widget(Label(text='Select card to disprove the Suggestion'))
-        cards = ()
-        #import pdb; pdb.set_trace()
+        cards = []
         for card in self.client.get_player(self.username).game_cards:
             if card['item'] == self.state.current_suggestion.suspect or \
                card['item'] == self.state.current_suggestion.weapon or \
                card['item'] == self.state.current_suggestion.room:
-                cards = cards + (card['item'],)
-        self.spinner = Spinner(text='Card',
-                          values=(cards),
-                          size_hint=(None, None), size=(100, 44),
-                          pos_hint={'center_x': .5, 'center_y': .5})
-        content.add_widget(self.spinner)
-        content.add_widget(submit_button)
-        self.popup = Popup(content=content, title='Prove Suggestion False',
-                      size_hint=(None, None), size=('300dp', '300dp'))
-        #submit_button.bind(on_release=self.disprove_suggestion())
-        submit_button.bind(on_release=self.popup.dismiss)
-        self.popup.open()
+                cards += [card['item']]
+        p = SuggestionResponsePopup(client=self.client, state=self.state, 
+                                    username=self.username, cards=cards)
+        p.open()
         
     def suggest_popup(self):
         p = SuggestionPopup(client=self.client, state=self.state)
@@ -375,6 +359,25 @@ class ControlPanel(FloatLayout):
     def end_turn(self):
         self.client.end_turn(self.username)
 
+class SuggestionResponsePopup(Popup):
+    card = ObjectProperty(None)
+    
+    def __init__(self, client, state, username, cards, **kwargs):
+        super(SuggestionResponsePopup, self).__init__(**kwargs)
+        self.username = username
+        self.client = client
+        self.state = state
+        self.card.values = cards
+        
+    def disprove_suggestion(self):
+        try:
+            self.client.make_suggestion_response(self.username, self.card.text)
+            self.dismiss()
+        except errors.GameClientException:
+            print "invalid exception response"
+            #p = ErrorPopup(message="Invalid move. Please select a valid move.")
+            #p.open()            
+        
 class AccusationPopup(Popup):
     suspect = ObjectProperty(None)
     weapon = ObjectProperty(None)
