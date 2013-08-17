@@ -152,7 +152,9 @@ class Player(object):
             "game_cards": [
                 game_card.format() for game_card in self.game_cards
             ],
-            "card_items_seen": self.card_items_seen
+            "card_items_seen": [
+                game_card.format() for game_card in self.card_items_seen
+            ]
         }
 
 
@@ -630,4 +632,7 @@ class GameStateBuilder(object):
         for player_dict in players:
             player_dict["game_cards"] = self._build_game_cards(
                 player_dict["game_cards"])
+            player_dict["card_items_seen"] = self._build_game_cards(
+                player_dict["card_items_seen"])
+
         return [Player(**player_dict) for player_dict in players]

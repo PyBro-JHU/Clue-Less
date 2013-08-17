@@ -266,8 +266,17 @@ class GameEngine(object):
         self._validate_gamecard_item(gamecard_item)
         self._validate_suggestion_response_player_owns_card(gamecard_item)
 
+        if gamecard_item in game_state.WEAPONS:
+            item_type = game_state.WEAPON
+        elif gamecard_item in game_state.ROOMS:
+            item_type = game_state.ROOM
+        else:
+            item_type = game_state.SUSPECT
+
+        card = game_state.GameCard(gamecard_item, item_type)
+
         #show the current player the card
-        self.game.current_player.card_items_seen.append(gamecard_item)
+        self.game.current_player.card_items_seen.append(card)
 
         message = "Player {0} has proven the suggestion false.".format(
             player_username)
