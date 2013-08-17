@@ -11,7 +11,6 @@ from kivy.uix.button import Button
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.label import Label
 from kivy.uix.popup import Popup
-from kivy.uix.spinner import Spinner
 from kivy.graphics import Ellipse, Color
 
 from clueless.client import game_play
@@ -53,10 +52,18 @@ class StartScreen(Screen):
         self.client = client
         
     def register_player(self):
-        self.client.register_player(self.username.text)
-        self.client.choose_suspect(self.username.text, self.suspect.text)
-        self.manager.get_screen('game').start_game(self.username.text)
-        self.manager.current = self.manager.next()
+        try:
+            self.client.register_player(self.username.text)
+            try:
+                self.client.choose_suspect(self.username.text, self.suspect.text)
+                self.manager.get_screen('game').start_game(self.username.text)
+                self.manager.current = self.manager.next()
+            except errors.GameClientException:
+                p = ErrorPopup(message="Suspect unavailable. Please select a different Suspect.")
+                p.open()
+        except errors.GameClientException:
+            p = ErrorPopup(message="Invalid Username. Please provide a valid Username.")
+            p.open()
 
 class GameScreen(Screen):
     gameboard = ObjectProperty(0)
@@ -70,22 +77,34 @@ class GameScreen(Screen):
         
     def start_game(self, username):
         self.username = username
-        self.state = self.client.start_new_game()
-        self.game_id = self.state.game_id
+        try:
+            self.state = self.client.start_new_game()
+            self.game_id = self.state.game_id
+        except errors.GameClientException:
+            p = ErrorPopup(message="Unable to start a new game. Please try again.")
+            p.open()
 
     def update(self, dt):
         if self.state != None:
+            try:
+                self.state = self.client.get_game_state(self.game_id)
+            except errors.GameClientException:
+                print "ERROR: Could not get the game state."
             self.gameboard.update(self.client, 
-                                  self.state.game_id,
+                                  self.state,
                                   self.username)
             self.controls.update(self.client, 
-                                 self.state.game_id,
+                                 self.state,
                                  self.username)
                 
     def quit_game(self):
-        self.state=None
-        self.client.destroy_game(self.game_id)
-        self.manager.current = self.manager.previous()
+        try:
+            self.client.destroy_game(self.game_id)
+            self.state=None
+            self.manager.current = self.manager.previous()
+        except errors.GameClientException:
+            p = ErrorPopup(message="Unable to end game. Please try again.")
+            p.open()
 
 class Gameboard(FloatLayout):
     study = ObjectProperty(None)
@@ -123,6 +142,7 @@ class Gameboard(FloatLayout):
     
     def __init__(self, **kwargs):
         super(Gameboard, self).__init__(**kwargs)
+        self.state = None
         
     def disable_tiles(self):
         self.study.disabled=True; self.study.canvas.opacity=.5
@@ -170,7 +190,11 @@ class Gameboard(FloatLayout):
         self.ballroom_kitchen.disabled=False; self.ballroom_kitchen.canvas.opacity=1
         self.kitchen.disabled=False; self.kitchen.canvas.opacity=1
 
-    def update(self, client, game_id, username):
+    def update(self, client, state, username):
+        self.client = client
+        self.state = state
+        self.username = username
+        
         TILES = {game_state.STUDY: self.study,
                  game_state.STUDY_HALL: self.study_hall,
                  game_state.HALL: self.hall,
@@ -199,11 +223,6 @@ class Gameboard(FloatLayout):
                  game_state.WHITE: self.ballroom_kitchen,
                  game_state.MUSTARD: self.lounge_dining}
 
-        self.client = client
-        self.username = username
-        self.state = self.client.get_game_state(game_id)
-        self.suspect = self.client.get_player(self.username).suspect
-        
         self.hall_lounge.canvas.after.clear()
         self.library_conservatory.canvas.after.clear()
         self.study_library.canvas.after.clear()
@@ -282,9 +301,15 @@ class Gameboard(FloatLayout):
         
     def make_move(self, room):
         try:
-            self.client.move_player(self.username, self.suspect, room)
+            self.suspect = self.client.get_player(self.username).suspect
+            try:
+                self.client.move_player(self.username, self.suspect, room)
+                self.disable_tiles()
+            except errors.GameClientException:
+                p = ErrorPopup(message="Invalid move. Please select a valid Room or Hallway\nor end your turn.")
+                p.open()
         except errors.GameClientException:
-            p = ErrorPopup(message="Invalid move. Please select a valid move.")
+            p = ErrorPopup(message="Unable to obtain Player information from the Game Server. Please try again.")
             p.open()
         
 class ControlPanel(FloatLayout):
@@ -296,27 +321,39 @@ class ControlPanel(FloatLayout):
     
     def __init__(self, **kwargs):
         super(ControlPanel, self).__init__(**kwargs)
+        self.state = None
+        self.player = None
         self.disproving = False
 
-    def update(self, client, game_id, username):
+    def update(self, client, state, username):
         self.client = client
+        self.state = state
         self.username = username
-        self.state = self.client.get_game_state(game_id)
+        
+        try:
+            self.player = self.client.get_player(self.username)
+        except errors.GameClientException:
+            print "ERROR: Could not get Player."
+
+        # enable the game tiles if it's the user's turn, otherwise disable them
         if username == self.state.current_player.username:
             self.enable_buttons()
         else:
             self.disable_buttons()
+            
         notifications = ''
         self.state.player_messages.reverse()
         for message in self.state.player_messages:
             notifications = notifications + message + '\n'
-        self.notifications.text = notifications
+        self.notifications.text = notifications + '[ You are ' + self.username + ' (' + self.player.suspect + ') ]'
+        
         notes = ''
-        for card in client.get_player(self.username).game_cards:
+        for card in self.player.game_cards:
             notes += card['item'] + " : " + card['item_type'] + '\n'
-        #for card in client.get_player(self.username).card_items_seen:
-        #    notes += card['item'] + " : " + card['item_type'] + '\n'
+        for card in self.player.card_items_seen:
+            notes += card['item'] + " : " + card['item_type'] + '\n'
         self.notepad.text = notes
+        
         if self.state.suggestion_response_player == None or \
            (self.state.suggestion_response_player != None and \
            self.state.suggestion_response_player.username != self.username):
@@ -326,6 +363,10 @@ class ControlPanel(FloatLayout):
            not self.disproving:
             self.disproving = True
             self.disprove_suggestion_popup()
+        '''content.add_widget(Label(text='You Win!'))
+        content.add_widget(Label(text='Please continue playing.'))
+        popup = Popup(content=content, title='Accusation Correct',
+                      size_hint=(None, None), size=('300dp', '300dp'))'''
                 
     def disable_buttons(self):
         self.suggest_button.disabled=True; self.suggest_button.canvas.opacity=.5
@@ -339,7 +380,11 @@ class ControlPanel(FloatLayout):
         
     def disprove_suggestion_popup(self):
         cards = []
-        for card in self.client.get_player(self.username).game_cards:
+        try:
+            self.player = self.client.get_player(self.username)
+        except errors.GameClientException:
+            print "ERROR: Could not get Player."
+        for card in self.player.game_cards:
             if card['item'] == self.state.current_suggestion.suspect or \
                card['item'] == self.state.current_suggestion.weapon or \
                card['item'] == self.state.current_suggestion.room:
@@ -357,7 +402,11 @@ class ControlPanel(FloatLayout):
         p.open()
         
     def end_turn(self):
-        self.client.end_turn(self.username)
+        try:
+            self.client.end_turn(self.username)
+        except errors.GameClientException:
+            p = ErrorPopup(message="Unable to end your turn. Please move your Suspect, \nmake a Suggestion, or try to end your turn again.")
+            p.open()
 
 class SuggestionResponsePopup(Popup):
     card = ObjectProperty(None)
@@ -374,9 +423,8 @@ class SuggestionResponsePopup(Popup):
             self.client.make_suggestion_response(self.username, self.card.text)
             self.dismiss()
         except errors.GameClientException:
-            print "invalid exception response"
-            #p = ErrorPopup(message="Invalid move. Please select a valid move.")
-            #p.open()            
+            p = ErrorPopup(message="Suggestion Response invalid. \nPlease select a valid Card and try again.")
+            p.open()            
         
 class AccusationPopup(Popup):
     suspect = ObjectProperty(None)
@@ -387,32 +435,35 @@ class AccusationPopup(Popup):
         super(AccusationPopup, self).__init__(**kwargs)
         self.client = client
         self.state = state
-    
-    def make_accusation(self):
-        self.client.make_accusation(self.state.current_player.username,
-                                    self.suspect.text,
-                                    self.weapon.text,
-                                    self.room.text)
-        self.popup.dismiss()
-        self.dismiss()
 
     def confirm_popup(self):
-        content = BoxLayout(orientation='vertical', padding=10, spacing=10)
-        content.add_widget(Label(text='Are you sure you want to make an Accusation?'))
-        accuseButton = Button(text='Accuse', size_hint_y=None, height='50sp')
-        cancelButton = Button(text='Cancel', size_hint_y=None, height='50sp')
-        content.add_widget(accuseButton)
-        content.add_widget(cancelButton)
-        self.popup = Popup(content=content, title='Make Accusation?', auto_dismiss=False,
-                      size_hint=(None, None), size=('500dp', '300dp'))
-        cancelButton.bind(on_release=self.popup.dismiss)
-        accuseButton.bind(on_release=self.make_accusation())
-        self.popup.open()
-        '''content.add_widget(Label(text='You Win!'))
-        content.add_widget(Label(text='Please continue playing.'))
-        popup = Popup(content=content, title='Accusation Correct',
-                      size_hint=(None, None), size=('300dp', '300dp'))'''
+        p = AccusationConfirmPopup(client=self.client, state=self.state, 
+                                   suspect=self.suspect, weapon=self.weapon,
+                                   room=self.room)
+        p.open()
+        self.dismiss()
 
+class AccusationConfirmPopup(Popup):
+
+    def __init__(self, client, state, suspect, weapon, room, **kwargs):
+        super(AccusationConfirmPopup, self).__init__(**kwargs)
+        self.client = client
+        self.state = state
+        self.suspect = suspect
+        self.weapon = weapon
+        self.room = room
+        
+    def make_accusation(self):
+        try:
+            self.client.make_accusation(self.state.current_player.username,
+                                        self.suspect.text,
+                                        self.weapon.text,
+                                        self.room.text)
+        except errors.GameClientException:
+            p = ErrorPopup(message="Accusation invalid. Please select a valid Suspect, \nRoom, and Weapon, and try again.")
+            p.open()            
+        self.dismiss()
+    
 class SuggestionPopup(Popup):
     suspect = ObjectProperty(None)
     weapon = ObjectProperty(None)
@@ -427,10 +478,15 @@ class SuggestionPopup(Popup):
         for room in self.state.game_board.values():
             if self.state.current_player.suspect in room.suspects:
                 break
-        self.client.make_suggestion(username,
-                                    self.suspect.text,
-                                    self.weapon.text,
-                                    room.name)
+        try:
+            self.client.make_suggestion(username,
+                                        self.suspect.text,
+                                        self.weapon.text,
+                                        room.name)
+        except errors.GameClientException:
+            p = ErrorPopup(message="You cannot make a Suggestion right now, or the Suspect \nor Weapon you chose for the Suggestion is invalid.\nPlease try again.")
+            p.open()            
+            
         self.dismiss()
 
 class ErrorPopup(Popup):
