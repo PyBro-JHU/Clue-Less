@@ -320,7 +320,9 @@ class GameEngine(object):
         #The player can still respond to suggestions but no longer has a turn,
         #and cannot win the game
         else:
-            self.game.turn_list.remove(self.game.current_player)
+            false_accuser = self.game.current_player
+            self._next_turn()
+            self.game.turn_list.remove(false_accuser)
             message = "Player {0} has made a false accusation and can no " \
                 "longer win the game.  All future turns are forfeited, " \
                 "but the player must make still prove suggestions false if " \
