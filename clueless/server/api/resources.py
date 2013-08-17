@@ -30,10 +30,17 @@ class PlayersResource(restful.Resource):
         """
         Gets a list of all registered players
         """
-        players = [
-            engine.players[key].format() for key in engine.players
-        ]
-        return {"players": players}
+        if engine.game:
+            players = [
+                player.format() for player in engine.game.players
+            ]
+            return {"players": players}
+
+        else:
+            players = [
+                engine.players[key].format() for key in engine.players
+            ]
+            return {"players": players}
 
 
 class PlayerResource(restful.Resource):
@@ -42,8 +49,16 @@ class PlayerResource(restful.Resource):
         """
         Get returns data for the requested player
         """
+        if engine.game:
+            player = [
+                player for player
+                in engine.game.players if player.username == username
+            ][0]
+            return player
 
-        return {"player": engine.players[username].format()}
+        else:
+
+            return {"player": engine.players[username].format()}
 
     def put(self, username):
         """
