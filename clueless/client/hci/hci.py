@@ -322,12 +322,18 @@ class ControlPanel(FloatLayout):
     def __init__(self, **kwargs):
         super(ControlPanel, self).__init__(**kwargs)
         self.state = None
+        self.player = None
         self.disproving = False
 
     def update(self, client, state, username):
         self.client = client
         self.state = state
         self.username = username
+        
+        try:
+            self.player = self.client.get_player(self.username)
+        except errors.GameClientException:
+            print "ERROR: Could not get Player."
 
         # enable the game tiles if it's the user's turn, otherwise disable them
         if username == self.state.current_player.username:
@@ -339,13 +345,15 @@ class ControlPanel(FloatLayout):
         self.state.player_messages.reverse()
         for message in self.state.player_messages:
             notifications = notifications + message + '\n'
-        self.notifications.text = notifications
+        self.notifications.text = notifications + '[ You are ' + self.username + ' (' + self.player.suspect + ') ]'
+        
         notes = ''
-        for card in client.get_player(self.username).game_cards:
+        for card in self.player.game_cards:
             notes += card['item'] + " : " + card['item_type'] + '\n'
-        for card in client.get_player(self.username).card_items_seen:
+        for card in self.player.card_items_seen:
             notes += card['item'] + " : " + card['item_type'] + '\n'
         self.notepad.text = notes
+        
         if self.state.suggestion_response_player == None or \
            (self.state.suggestion_response_player != None and \
            self.state.suggestion_response_player.username != self.username):
@@ -355,6 +363,10 @@ class ControlPanel(FloatLayout):
            not self.disproving:
             self.disproving = True
             self.disprove_suggestion_popup()
+        '''content.add_widget(Label(text='You Win!'))
+        content.add_widget(Label(text='Please continue playing.'))
+        popup = Popup(content=content, title='Accusation Correct',
+                      size_hint=(None, None), size=('300dp', '300dp'))'''
                 
     def disable_buttons(self):
         self.suggest_button.disabled=True; self.suggest_button.canvas.opacity=.5
@@ -368,7 +380,11 @@ class ControlPanel(FloatLayout):
         
     def disprove_suggestion_popup(self):
         cards = []
-        for card in self.client.get_player(self.username).game_cards:
+        try:
+            self.player = self.client.get_player(self.username)
+        except errors.GameClientException:
+            print "ERROR: Could not get Player."
+        for card in self.player.game_cards:
             if card['item'] == self.state.current_suggestion.suspect or \
                card['item'] == self.state.current_suggestion.weapon or \
                card['item'] == self.state.current_suggestion.room:
@@ -419,32 +435,35 @@ class AccusationPopup(Popup):
         super(AccusationPopup, self).__init__(**kwargs)
         self.client = client
         self.state = state
-    
-    def make_accusation(self):
-        self.client.make_accusation(self.state.current_player.username,
-                                    self.suspect.text,
-                                    self.weapon.text,
-                                    self.room.text)
-        self.popup.dismiss()
-        self.dismiss()
 
     def confirm_popup(self):
-        content = BoxLayout(orientation='vertical', padding=10, spacing=10)
-        content.add_widget(Label(text='Are you sure you want to make an Accusation?'))
-        accuseButton = Button(text='Accuse', size_hint_y=None, height='50sp')
-        cancelButton = Button(text='Cancel', size_hint_y=None, height='50sp')
-        content.add_widget(accuseButton)
-        content.add_widget(cancelButton)
-        self.popup = Popup(content=content, title='Make Accusation?', auto_dismiss=False,
-                      size_hint=(None, None), size=('500dp', '300dp'))
-        cancelButton.bind(on_release=self.popup.dismiss)
-        accuseButton.bind(on_release=self.make_accusation())
-        self.popup.open()
-        '''content.add_widget(Label(text='You Win!'))
-        content.add_widget(Label(text='Please continue playing.'))
-        popup = Popup(content=content, title='Accusation Correct',
-                      size_hint=(None, None), size=('300dp', '300dp'))'''
+        p = AccusationConfirmPopup(client=self.client, state=self.state, 
+                                   suspect=self.suspect, weapon=self.weapon,
+                                   room=self.room)
+        p.open()
+        self.dismiss()
 
+class AccusationConfirmPopup(Popup):
+
+    def __init__(self, client, state, suspect, weapon, room, **kwargs):
+        super(AccusationConfirmPopup, self).__init__(**kwargs)
+        self.client = client
+        self.state = state
+        self.suspect = suspect
+        self.weapon = weapon
+        self.room = room
+        
+    def make_accusation(self):
+        try:
+            self.client.make_accusation(self.state.current_player.username,
+                                        self.suspect.text,
+                                        self.weapon.text,
+                                        self.room.text)
+        except errors.GameClientException:
+            p = ErrorPopup(message="Accusation invalid. Please select a valid Suspect, \nRoom, and Weapon, and try again.")
+            p.open()            
+        self.dismiss()
+    
 class SuggestionPopup(Popup):
     suspect = ObjectProperty(None)
     weapon = ObjectProperty(None)

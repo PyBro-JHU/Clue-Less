@@ -342,6 +342,32 @@
                 height: '50sp'
                 on_release: root.dismiss()
                     
+<AccusationConfirmPopup>:
+    auto_dismiss: True
+    title: 'Confirm Accusation'
+    size_hint: None, None
+    size: '500dp', '300dp'
+    BoxLayout:
+        orientation: 'vertical'
+        padding: 10
+        spacing: 10
+        Label:
+            text: 'Are you sure that you want to make an Accusation?'
+        BoxLayout:
+            orientation: 'horizontal'
+            padding: 5
+            spacing: 5
+            Button:
+                text: 'Accuse'
+                size_hint_y: None
+                height: '50sp'
+                on_release: root.make_accusation()
+            Button:
+                text: 'Cancel'
+                size_hint_y: None
+                height: '50sp'
+                on_release: root.dismiss()
+                
 <SuggestionPopup>:
     suspect: _suspect
     weapon: _weapon
