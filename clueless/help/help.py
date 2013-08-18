@@ -3,8 +3,8 @@ import webbrowser
 
 import clueless
 base_dir = os.path.dirname(clueless.__file__)
-help_file = "file:///{base_dir}/help/clueless_help.htm".format(
-    base_dir=base_dir)
+help_file = "file:///etc/cluless/clueless_help.htm"
+webbrowser.open(help_file)
 
 def open():
     webbrowser.open(help_file)
