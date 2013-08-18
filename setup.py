@@ -29,5 +29,6 @@ setup(
     test_suite='nose.collector',
     zip_safe=False,
     include_package_data=True,
-    packages=find_packages(exclude=['ez_setup'])
+    packages=find_packages(exclude=['ez_setup']),
+    data_files=[('help', ['help/clueless_help.htm'])]
 )
