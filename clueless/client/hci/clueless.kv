@@ -53,6 +53,7 @@
 <GameScreen>:
     gameboard: gameboard
     controls: controls
+    user: _user
     
     canvas:
         Color:
@@ -81,6 +82,11 @@
                 text_size: self.width, None
                 color: (1, 1, 1, .8)
                 text: 'PyBro - Clue-less %s' % '0.1.0'
+            Label:
+                id: _user
+                height: '24p'
+                text_size: self.width, None
+                color: (1, 1, 1, .8)
             Button:
                 size_hint_x: None
                 width: 60
@@ -441,7 +447,7 @@
     auto_dismiss: True
     size_hint: None, None
     size: '500dp', '300dp'
-    title: 'Clue-Less Error'
+    title: 'Clue-Less Information'
     BoxLayout:
         orientation: 'vertical'
         Label:

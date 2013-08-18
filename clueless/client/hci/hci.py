@@ -71,6 +71,7 @@ class StartScreen(Screen):
 class GameScreen(Screen):
     gameboard = ObjectProperty(0)
     controls = ObjectProperty(0)
+    user = ObjectProperty(0)
     
     def __init__(self, client, **kwargs):
         super(GameScreen, self).__init__(**kwargs)
@@ -82,7 +83,11 @@ class GameScreen(Screen):
         self.username = username
         try:
             self.state = self.client.start_new_game()
+            for card in self.state.case_file:
+                print card.item
             self.game_id = self.state.game_id
+            self.suspect = self.client.get_player(self.username).suspect
+            self.user.text = "You are " + self.username + ": " + self.suspect 
         except errors.GameClientException:
             p = ErrorPopup(message="Unable to start a new game. Please try again.")
             p.open()
@@ -93,12 +98,26 @@ class GameScreen(Screen):
                 self.state = self.client.get_game_state(self.game_id)
             except errors.GameClientException:
                 print "ERROR: Could not get the game state."
-            self.gameboard.update(self.client, 
-                                  self.state,
-                                  self.username)
-            self.controls.update(self.client, 
-                                 self.state,
-                                 self.username)
+                self.state = None
+            if self.state != None:
+                if self.state.game_winner != None:
+                    if self.state.game_winner.username == self.username:
+                        message = "Accusation correct. Congratulations, you won!"
+                    else:
+                        message = "Player " + self.state.game_winner.username + " won the game!"
+                    self.state=None
+                    self.manager.current = self.manager.previous()
+                    p = ErrorPopup(message=message)
+                    p.open()
+                else:
+                    self.gameboard.update(self.client, 
+                                          self.state,
+                                          self.username)
+                    self.controls.update(self.client, 
+                                         self.state,
+                                         self.username)
+            else:
+                self.manager.current = self.manager.previous()
 
     def display_help(self):
         try:
@@ -354,7 +373,7 @@ class ControlPanel(FloatLayout):
         self.state.player_messages.reverse()
         for message in self.state.player_messages:
             notifications = notifications + message + '\n'
-        self.notifications.text = notifications + '[ You are ' + self.username + ' (' + self.player.suspect + ') ]'
+        self.notifications.text = notifications
         
         notes = ''
         for card in self.player.game_cards:
@@ -372,10 +391,6 @@ class ControlPanel(FloatLayout):
            not self.disproving:
             self.disproving = True
             self.disprove_suggestion_popup()
-        '''content.add_widget(Label(text='You Win!'))
-        content.add_widget(Label(text='Please continue playing.'))
-        popup = Popup(content=content, title='Accusation Correct',
-                      size_hint=(None, None), size=('300dp', '300dp'))'''
                 
     def disable_buttons(self):
         self.suggest_button.disabled=True; self.suggest_button.canvas.opacity=.5
