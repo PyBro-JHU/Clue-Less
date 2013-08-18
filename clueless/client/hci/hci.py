@@ -13,9 +13,10 @@ from kivy.uix.label import Label
 from kivy.uix.popup import Popup
 from kivy.graphics import Ellipse, Color
 
-from clueless.client import game_play
 from clueless.client import errors
+from clueless.client import game_play
 from clueless.model import game_state
+from clueless.client.hci import help
 
 class DisableButton(Button):
     def __init__(self, **kwargs):
@@ -96,6 +97,12 @@ class GameScreen(Screen):
             self.controls.update(self.client, 
                                  self.state,
                                  self.username)
+
+    def display_help(self):
+        try:
+            help.open()
+        except:
+            pass
                 
     def quit_game(self):
         try:
