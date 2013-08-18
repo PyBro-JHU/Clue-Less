@@ -4,7 +4,6 @@ from flask.ext import restful
 from clueless import log
 from clueless.server.api import resources
 
-
 _LOG = log.get_logger(__name__)
 
 
