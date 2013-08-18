@@ -1,5 +1,5 @@
 import kivy
-from clueless import help
+from clueless.help import help
 
 kivy.require('1.1.3')
 
