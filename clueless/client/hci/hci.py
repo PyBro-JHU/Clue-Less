@@ -71,6 +71,7 @@ class StartScreen(Screen):
 class GameScreen(Screen):
     gameboard = ObjectProperty(0)
     controls = ObjectProperty(0)
+    user = ObjectProperty(0)
     
     def __init__(self, client, **kwargs):
         super(GameScreen, self).__init__(**kwargs)
@@ -85,6 +86,8 @@ class GameScreen(Screen):
             for card in self.state.case_file:
                 print card.item
             self.game_id = self.state.game_id
+            self.suspect = self.client.get_player(self.username).suspect
+            self.user.text = "You are " + self.username + ": " + self.suspect 
         except errors.GameClientException:
             p = ErrorPopup(message="Unable to start a new game. Please try again.")
             p.open()
@@ -370,7 +373,7 @@ class ControlPanel(FloatLayout):
         self.state.player_messages.reverse()
         for message in self.state.player_messages:
             notifications = notifications + message + '\n'
-        self.notifications.text = notifications + '[ You are ' + self.username + ' (' + self.player.suspect + ') ]'
+        self.notifications.text = notifications
         
         notes = ''
         for card in self.player.game_cards:
