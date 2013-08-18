@@ -82,6 +82,8 @@ class GameScreen(Screen):
         self.username = username
         try:
             self.state = self.client.start_new_game()
+            for card in self.state.case_file:
+                print card.item
             self.game_id = self.state.game_id
         except errors.GameClientException:
             p = ErrorPopup(message="Unable to start a new game. Please try again.")
@@ -93,12 +95,26 @@ class GameScreen(Screen):
                 self.state = self.client.get_game_state(self.game_id)
             except errors.GameClientException:
                 print "ERROR: Could not get the game state."
-            self.gameboard.update(self.client, 
-                                  self.state,
-                                  self.username)
-            self.controls.update(self.client, 
-                                 self.state,
-                                 self.username)
+                self.state = None
+            if self.state != None:
+                if self.state.game_winner != None:
+                    if self.state.game_winner.username == self.username:
+                        message = "Accusation correct. Congratulations, you won!"
+                    else:
+                        message = "Player " + self.state.game_winner.username + " won the game!"
+                    self.state=None
+                    self.manager.current = self.manager.previous()
+                    p = ErrorPopup(message=message)
+                    p.open()
+                else:
+                    self.gameboard.update(self.client, 
+                                          self.state,
+                                          self.username)
+                    self.controls.update(self.client, 
+                                         self.state,
+                                         self.username)
+            else:
+                self.manager.current = self.manager.previous()
 
     def display_help(self):
         try:
@@ -372,10 +388,6 @@ class ControlPanel(FloatLayout):
            not self.disproving:
             self.disproving = True
             self.disprove_suggestion_popup()
-        '''content.add_widget(Label(text='You Win!'))
-        content.add_widget(Label(text='Please continue playing.'))
-        popup = Popup(content=content, title='Accusation Correct',
-                      size_hint=(None, None), size=('300dp', '300dp'))'''
                 
     def disable_buttons(self):
         self.suggest_button.disabled=True; self.suggest_button.canvas.opacity=.5
