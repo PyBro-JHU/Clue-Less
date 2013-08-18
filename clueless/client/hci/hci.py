@@ -1,3 +1,7 @@
+import inspect
+import os
+import webbrowser
+
 import kivy
 kivy.require('1.1.3')
 
@@ -100,7 +104,10 @@ class GameScreen(Screen):
 
     def display_help(self):
         try:
-            help.open()
+            base_dir = inspect.getfile(inspect.currentframe()).rstrip("hci.py")
+            help_file = "file:///{base_dir}resources/help/clueless_help.htm".format(
+            base_dir=base_dir)
+            webbrowser.open(help_file)
         except:
             pass
                 
