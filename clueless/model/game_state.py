@@ -476,7 +476,7 @@ class GameState(object):
                     name=CONSERVATORY_BALLROOM,
                     connected_spaces=[
                         CONSERVATORY,
-                        BALLROOM_KITCHEN
+                        BALLROOM
                     ]
                 ),
                 BALLROOM_KITCHEN:  Hallway(
