@@ -18,7 +18,7 @@ from clueless.client import game_play
 from clueless.model import game_state
 from clueless import log
 
-_LOG = log.get_logger()
+_LOG = log.get_logger(__name__)
 
 class DisableButton(Button):
     def __init__(self, **kwargs):
