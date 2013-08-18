@@ -30,7 +30,6 @@ setup(
     zip_safe=False,
     include_package_data=True,
     packages=find_packages(exclude=['ez_setup']),
-    packages=['help'],
     package_dir={'help': 'clueless/help'},
     package_data={'help': ['clueless_help.htm']}
 )
