@@ -8,7 +8,7 @@ except ImportError:
 
 setup(
     name='Clue-Less',
-    version='0.1',
+    version='0.2',
     description='',
     author='PyBro-JHU',
     author_email='stevendgonzales@gmail.com',
@@ -29,5 +29,7 @@ setup(
     test_suite='nose.collector',
     zip_safe=False,
     include_package_data=True,
-    packages=find_packages(exclude=['ez_setup'])
+    packages=find_packages(exclude=['ez_setup']),
+    package_dir={'help': 'clueless/help'},
+    package_data={'help': ['clueless_help.htm']}
 )

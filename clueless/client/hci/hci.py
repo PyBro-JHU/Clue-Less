@@ -1,4 +1,6 @@
 import kivy
+from clueless.help import help
+
 kivy.require('1.1.3')
 
 from kivy.app import App
@@ -11,9 +13,12 @@ from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.popup import Popup
 from kivy.graphics import Ellipse, Color
 
-from clueless.client import game_play
 from clueless.client import errors
+from clueless.client import game_play
 from clueless.model import game_state
+from clueless import log
+
+_LOG = log.get_logger(__name__)
 
 class DisableButton(Button):
     def __init__(self, **kwargs):
@@ -110,6 +115,12 @@ class GameScreen(Screen):
                                          self.username)
             else:
                 self.manager.current = self.manager.previous()
+
+    def display_help(self):
+        try:
+            help.open()
+        except Exception as ex:
+            _LOG.exception(ex.message)
                 
     def quit_game(self):
         try:
