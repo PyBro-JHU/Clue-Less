@@ -16,7 +16,9 @@ from kivy.graphics import Ellipse, Color
 from clueless.client import errors
 from clueless.client import game_play
 from clueless.model import game_state
+from clueless import log
 
+_LOG = log.get_logger()
 
 class DisableButton(Button):
     def __init__(self, **kwargs):
@@ -101,8 +103,8 @@ class GameScreen(Screen):
     def display_help(self):
         try:
             help.open()
-        except:
-            pass
+        except Exception as ex:
+            _LOG.exception(ex.message)
                 
     def quit_game(self):
         try:
