@@ -8,7 +8,7 @@ except ImportError:
 
 setup(
     name='Clue-Less',
-    version='0.1',
+    version='0.2',
     description='',
     author='PyBro-JHU',
     author_email='stevendgonzales@gmail.com',
