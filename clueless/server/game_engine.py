@@ -136,6 +136,7 @@ class GameEngine(object):
         Destroys the current Game and deletes form datastore
         """
         self.game = None
+        self.game_id = None
         self.players = dict()
         self.db_handler.delete_document(
             object_name='game', query_filter={"game_id": self.game_id})
